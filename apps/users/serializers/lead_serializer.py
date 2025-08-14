@@ -103,3 +103,12 @@ class LeadListSerializer(serializers.ModelSerializer):
     class Meta:
         model = LeadModel
         fields = '__all__'
+
+class LeadDetailSerializer(serializers.ModelSerializer):
+    lead_phone = LeadPhoneSerializer(source='leadphonemodel_set', many=True, required=False)
+    lead_email = LeadEmailSerializer(source='leademailmodel_set', many=True, required=False)
+    chat_history = ChatMessageHistorySerializer(source='chatmessagehistory_set', many=True, required=False)
+
+    class Meta:
+        model = LeadModel
+        fields = '__all__'

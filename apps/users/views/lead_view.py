@@ -10,7 +10,8 @@ from rest_framework.exceptions import ValidationError
 
 from apps.users.serializers.lead_serializer import (
     LeadRegisterSerializer,
-    LeadListSerializer
+    LeadListSerializer,
+    LeadDetailSerializer
 )
 from apps.aiModule.utils.follow_up import refreshAI
 from apps.users.permissions import (
@@ -61,3 +62,15 @@ class LeadListView(APIView):
         serializer = LeadListSerializer(leads, many=True)
         return Response(serializer.data)
         
+
+class LeadDetailView(APIView):
+    permission_classes = [IsAgent]
+
+    def get(self, request):
+        lead_id = request.query_params.get('lead_id')
+        try:
+            lead = LeadModel.objects.get(id=lead_id)
+        except LeadModel.DoesNotExist:
+            return Response({'message': 'Lead not found'}, status=HTTP_404_NOT_FOUND)
+        serializer = LeadDetailSerializer(lead, many=True)
+        return Response(serializer.data, status=HTTP_200_OK)

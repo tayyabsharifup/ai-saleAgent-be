@@ -20,7 +20,8 @@ from .views.agent_view import (
 from .views.lead_view import (
     LeadRegisterView,
     LeadUpdateView,
-    LeadListView
+    LeadListView,
+    LeadDetailView,
 )
 
 from .views.manager_view import (
@@ -50,6 +51,7 @@ lead = [
     path('lead/register/', LeadRegisterView.as_view(), name='lead-register'),
     path('lead/update/<int:id>/', LeadUpdateView.as_view(), name='lead-update'),
     path('lead/list/', LeadListView.as_view(), name='lead-list'),
+    path('lead/detail/', LeadDetailView.as_view(), name='lead-detail'),
 ]
 
 manager = [
