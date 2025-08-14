@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Twilio Browser Client</title>
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/@twilio/voice-sdk@2.10.2/dist/twilio.min.js"></script>
+</head>
+
+<body>
+    <h1>Twilio Softphone</h1>
+    <div>
+        <label>Enter Lead Number</label>
+        <input type="text" id="phoneNumber" placeholder="Enter E.164 number (e.g., +1234567890)">
+    </div>
+    <div>
+        <label>Enter Twilio Number Number</label>
+        <input type="text" id="fromNumber" placeholder="Enter E.164 number (e.g., +1234567890)">
+    </div>
+    <button id="callButton">Call</button>
+    <button id="hangupButton" style="display: inline-block;">Hang Up</button>
+    <div id="log"></div>
+
+    <script type="text/javascript">
+        let device;
+        let currentConnection;
+        let deviceInitialized = false;
+
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        const callButton = document.getElementById('callButton');
+        const hangupButton = document.getElementById('hangupButton');
+        const logDiv = document.getElementById('log');
+
+        function log(message) {
+            logDiv.innerHTML += `<p>${message}</p>`;
+            console.log(message);
+        }
+
+        async function fetchToken() {
+            try {
+                const response = await fetch('/temp/token/?identity=web-user');
+                const data = await response.json()
+                return data.token;
+            } catch (error) {
+                log('Failed to fetch token: ' + error.message);
+                throw error;
+            }
+        }
+
+        async function initializeDevice() {
+            log('Initializing Twilio Device...');
+            try {
+                const token = await fetchToken();
+                console.log("Is Twilio defined?", typeof Twilio);
+                device = new Twilio.Device(token, {
+                    logLevel: 1
+                });
+
+                device.on('ready', function () {
+                    log('Twilio.Device Ready!');
+                    callButton.disabled = false;
+                });
+
+                device.on('error', function (error) {
+                    log('Twilio.Device Error: ' + error.message);
+                    if (error.code === 20101 || error.code === 20104) { // Invalid Access Token or Token Expired
+                        log('The hardcoded token might be invalid or expired. Please refresh.');
+                    }
+                });
+
+                device.on('connect', function (connection) {
+                    log('Successfully established call!');
+                    currentConnection = connection;
+                    callButton.style.display = 'none';
+                    hangupButton.style.display = 'inline-block';
+                    log('Call is being recorded... ')
+
+                    connection.on('disconnect', function () {
+                        log('Call disconnected. Recording Saved');
+                        resetUI();
+                    });
+                    connection.on('error', function (error) {
+                        log('Connection Error: ' + error.message);
+                        resetUI();
+                    });
+                });
+
+            } catch (error) {
+                log(`Error initializing Twilio.Device: ${error.message}`);
+                console.error("Error initializing device:", error);
+            }
+        }
+
+        function resetUI() {
+            callButton.style.display = 'inline-block';
+            hangupButton.style.display = 'none';
+            currentConnection = null;
+        }
+
+        callButton.addEventListener('click', async function () {
+            const phoneNumber = phoneNumberInput.value;
+            const fromNumber = document.getElementById('fromNumber').value;
+            if (!phoneNumber) {
+                alert('Please enter a phone number to call.');
+                return;
+            }
+            if (!fromNumber) {
+                alert('Please enter a from number.')
+                return;
+            }
+            if (!deviceInitialized) {
+                await initializeDevice();
+                deviceInitialized = true;
+                if (!device) {
+                    log('Device failed to initialize.');
+                    return;
+                }
+            }
+            if (!device) {
+                log('Device not initialized. Please wait or refresh.');
+                return;
+            }
+
+            log(`Attempting to call ${phoneNumber}...`);
+            try {
+                currentConnection = await device.connect({ params: { To: phoneNumber, From: fromNumber } });
+            } catch (error) {
+                log(`Error starting call: ${error.message}`);
+            }
+        });
+
+        hangupButton.addEventListener('click', function () {
+            if (currentConnection) {
+                log('Hanging up...');
+                currentConnection.disconnect();
+            } else if (device) {
+                log('No active call to hang up.');
+            }
+        });
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,16 @@
+.venv/
+.env
+__pycache__
+db.sqlite3
+static
+theme
+
+**/migrations/*
+!**/migrations/__init__.py
+tmp.ipynb
+*.mp3
+
+logs/*
+!logs/.gitkeep
+
+staticfiles/*
