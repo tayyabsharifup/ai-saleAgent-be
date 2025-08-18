@@ -74,22 +74,34 @@ class AgentCallAnalytics(APIView):
             agent = AgentModel.objects.get(user=request.user)
         except AgentModel.DoesNotExist:
             return Response({'message': 'Agent not found'}, status=HTTP_404_NOT_FOUND)
-        total_leads = LeadModel.objects.filter(assign_to=agent).count()
-        total_leads_this_week = LeadModel.objects.filter(
+        leads = LeadModel.objects.filter(assign_to=agent).count()
+        leads_this_week = LeadModel.objects.filter(
             assign_to=agent, created_at__gte=timezone.now() - timedelta(days=7)).count()
         
-        total_calls = ChatMessageHistory.objects.filter(lead__assign_to=agent, messageType='call').count()
-        total_week_calls = ChatMessageHistory.objects.filter(messageType='call', created_at__gte=timezone.now() - timedelta(days=7)).count()
+        calls = ChatMessageHistory.objects.filter(lead__assign_to=agent, messageType='call').count()
+        week_calls = ChatMessageHistory.objects.filter(lead__assign_to=agent,messageType='call', created_at__gte=timezone.now() - timedelta(days=7)).count()
 
-        total_emails = ChatMessageHistory.objects.filter(messageType='email').count()
-        total_week_emails = ChatMessageHistory.objects.filter(messageType='email', created_at__gte=timezone.now() - timedelta(days=7)).count()
+        emails = ChatMessageHistory.objects.filter(lead__assign_to=agent,messageType='email').count()
+        week_emails = ChatMessageHistory.objects.filter(lead__assign_to=agent,messageType='email', created_at__gte=timezone.now() - timedelta(days=7)).count()
+
+        follow_ups = ChatMessageHistory.objects.filter(lead__assign_to=agent, wroteBy='ai', follow_up_date__isnull=False).count()
+        follow_ups_this_week = ChatMessageHistory.objects.filter(lead__assign_to=agent, wroteBy='ai', follow_up_date__isnull=False,
+                                                                        created_at__gte=timezone.now() - timedelta(days=7)).count()
+        
+        leads_added_this_week = LeadModel.objects.filter(
+            created_at__gte=timezone.now() - timedelta(days=7)).count()
+        
+
 
 
         return Response({
-            'total_leads': total_leads,
-            'total_leads_this_week': total_leads_this_week,
-            'total_calls': total_calls,
-            'total_week_calls': total_week_calls,
-            'total_emails': total_emails,
-            'total_week_emails': total_week_emails,
+            'leads': leads,
+            'leads_this_week': leads_this_week,
+            'calls': calls,
+            'week_calls': week_calls,
+            'emails': emails,
+            'week_emails': week_emails,
+            'follow_ups': follow_ups,
+            'follow_ups_this_week': follow_ups_this_week,
+            'leads_added_this_week': leads_added_this_week,
         }, status=HTTP_200_OK)
