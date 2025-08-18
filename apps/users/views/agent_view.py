@@ -90,8 +90,40 @@ class AgentCallAnalytics(APIView):
         
         leads_added_this_week = LeadModel.objects.filter(
             created_at__gte=timezone.now() - timedelta(days=7)).count()
-        
 
+        emails_sent = ChatMessageHistory.objects.filter(lead__assign_to=agent, messageType='email', wroteBy__in=['agent', 'ai']).count()
+        emails_replied = ChatMessageHistory.objects.filter(lead__assign_to=agent, messageType='email', wroteBy='client').count()
+        avg_reply_rate = (emails_replied / emails_sent * 100) if emails_sent > 0 else 0
+
+        today = timezone.now().date()
+        daily_analytics = []
+        for i in range(7):
+            current_day = today - timedelta(days=i)
+            
+            calls_on_day = ChatMessageHistory.objects.filter(
+                lead__assign_to=agent,
+                messageType='call',
+                created_at__date=current_day
+            ).count()
+
+            emails_on_day = ChatMessageHistory.objects.filter(
+                lead__assign_to=agent,
+                messageType='email',
+                created_at__date=current_day
+            ).count()
+
+            leads_added_on_day = LeadModel.objects.filter(
+                assign_to=agent,
+                created_at__date=current_day
+            ).count()
+
+            daily_analytics.append({
+                'date': current_day.isoformat(),
+                'calls': calls_on_day,
+                'emails': emails_on_day,
+                'leads_added': leads_added_on_day
+            })
+        daily_analytics.reverse()
 
 
         return Response({
@@ -104,4 +136,9 @@ class AgentCallAnalytics(APIView):
             'follow_ups': follow_ups,
             'follow_ups_this_week': follow_ups_this_week,
             'leads_added_this_week': leads_added_this_week,
+            'daily_analytics': daily_analytics,
+            'emails_sent': emails_sent,
+            'emails_replied': emails_replied,
+            'avg_reply_rate': avg_reply_rate,
         }, status=HTTP_200_OK)
+
