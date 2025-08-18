@@ -1,3 +1,5 @@
+from datetime import timedelta
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import *
@@ -6,7 +8,6 @@ from apps.users.serializers.agent_serializer import (
     AgentRegisterSerializer,
     AgentLoginSerializer,
     AgentProfileSerializer,
-    AgentDashboardSerializer,
     AgentDashboardSerializer,
 )
 
@@ -62,3 +63,20 @@ class AgentDashboardView(APIView):
 
         except AgentModel.DoesNotExist:
             return Response({'message': 'Agent not found'}, status=HTTP_404_NOT_FOUND)
+
+class AgentCallAnalytics(APIView):
+    permission_classes = [IsAgent]
+
+    def get(self, request):
+        try:
+            agent = AgentModel.objects.get(user=request.user)
+        except AgentModel.DoesNotExist:
+            return Response({'message': 'Agent not found'}, status=HTTP_404_NOT_FOUND)
+        total_leads = LeadModel.objects.filter(assign_to=agent).count()
+        total_leads_this_week = LeadModel.objects.filter(
+            assign_to=agent, created_at__gte=timezone.now() - timedelta(days=7)).count()
+
+        return Response({
+            'total_leads': total_leads,
+            'total_leads_this_week': total_leads_this_week,
+        }, status=HTTP_200_OK)

@@ -12,6 +12,7 @@ class LeadModel(models.Model):
     state = models.CharField(max_length=20, blank=True, default='')
     zip_code = models.CharField(max_length=10, blank=True, default='')
     address = models.CharField(max_length=100, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
         max_length=20,
         choices=[('in_progress', 'in_progress'), ('not_initiated', 'not_initiated'), ('over_due', 'over_due'), ('converted', 'converted')],

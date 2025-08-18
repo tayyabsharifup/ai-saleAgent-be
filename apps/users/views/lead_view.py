@@ -39,13 +39,13 @@ class LeadRegisterView(APIView):
             return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
 class LeadUpdateView(UpdateAPIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAgent | IsManager | IsAdmin]
     queryset = LeadModel.objects.all()
     serializer_class = LeadRegisterSerializer
     lookup_field = 'id'
 
 class LeadListView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAgent | IsManager | IsAdmin]
     serializer_class = LeadListSerializer
 
     def get(self, request):
