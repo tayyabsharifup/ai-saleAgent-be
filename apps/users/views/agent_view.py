@@ -14,6 +14,8 @@ from apps.users.serializers.agent_serializer import (
 from rest_framework.permissions import IsAuthenticated
 from apps.users.permissions import IsAgent
 from apps.users.models import AgentModel, LeadModel
+from apps.aiModule.models import ChatMessageHistory
+
 
 class RegisterAgentView(APIView):
     serializer_class = AgentRegisterSerializer
@@ -75,8 +77,19 @@ class AgentCallAnalytics(APIView):
         total_leads = LeadModel.objects.filter(assign_to=agent).count()
         total_leads_this_week = LeadModel.objects.filter(
             assign_to=agent, created_at__gte=timezone.now() - timedelta(days=7)).count()
+        
+        total_calls = ChatMessageHistory.objects.filter(lead__assign_to=agent, messageType='call').count()
+        total_week_calls = ChatMessageHistory.objects.filter(messageType='call', created_at__gte=timezone.now() - timedelta(days=7)).count()
+
+        total_emails = ChatMessageHistory.objects.filter(messageType='email').count()
+        total_week_emails = ChatMessageHistory.objects.filter(messageType='email', created_at__gte=timezone.now() - timedelta(days=7)).count()
+
 
         return Response({
             'total_leads': total_leads,
             'total_leads_this_week': total_leads_this_week,
+            'total_calls': total_calls,
+            'total_week_calls': total_week_calls,
+            'total_emails': total_emails,
+            'total_week_emails': total_week_emails,
         }, status=HTTP_200_OK)
