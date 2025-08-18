@@ -65,12 +65,18 @@ class LeadListView(APIView):
 
 class LeadDetailView(APIView):
     permission_classes = [IsAgent]
+    serializer_class = LeadDetailSerializer
+
 
     def get(self, request):
         lead_id = request.query_params.get('lead_id')
+        if not lead_id:
+            return Response({'message': 'lead_id query parameter is required.'}, status=HTTP_400_BAD_REQUEST)
         try:
             lead = LeadModel.objects.get(id=lead_id)
         except LeadModel.DoesNotExist:
             return Response({'message': 'Lead not found'}, status=HTTP_404_NOT_FOUND)
-        serializer = LeadDetailSerializer(lead, many=True)
+        except Exception as e:
+            return Response({'message': 'An error occurred', 'error': str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+        serializer = LeadDetailSerializer(lead)
         return Response(serializer.data, status=HTTP_200_OK)

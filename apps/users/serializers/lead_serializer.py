@@ -107,8 +107,12 @@ class LeadListSerializer(serializers.ModelSerializer):
 class LeadDetailSerializer(serializers.ModelSerializer):
     lead_phone = LeadPhoneSerializer(source='leadphonemodel_set', many=True, required=False)
     lead_email = LeadEmailSerializer(source='leademailmodel_set', many=True, required=False)
-    chat_history = ChatMessageHistorySerializer(source='chatmessagehistory_set', many=True, required=False)
+    chat_history = serializers.SerializerMethodField()
 
     class Meta:
         model = LeadModel
         fields = '__all__'
+    
+    def get_chat_history(self, obj):
+        chat_history = obj.chatmessagehistory_set.all().order_by('-created_at')
+        return ChatMessageHistorySerializer(chat_history, many=True).data
