@@ -4,6 +4,7 @@ from .views.user_view import (
     SendOtpView,
     ChangePasswordView,
     ResetPasswordWithOtpView,
+    LoginUserView,
 
 )
 from rest_framework_simplejwt.views import (
@@ -27,7 +28,8 @@ from .views.lead_view import (
 
 from .views.manager_view import (
     ManagerLoginView,
-    ManagerRegisterView
+    ManagerRegisterView,
+    ManagerDashboardView,
 )
 from .views.admin_view import (
     AdminLoginView
@@ -38,7 +40,9 @@ user = [
     path('user/verify_otp/', VerifyOtpView.as_view(), name='verify-otp'),
     path('user/send_otp/', SendOtpView.as_view(), name='send-otp'),
     path('user/change_password/', ChangePasswordView.as_view(), name='change-password'),
-    path('user/reset_password_otp/', ResetPasswordWithOtpView.as_view(), name='reset-password-otp')
+    path('user/reset_password_otp/', ResetPasswordWithOtpView.as_view(), name='reset-password-otp'),
+    path('user/login/', LoginUserView.as_view(), name='login'),
+
 ]
 
 agent = [
@@ -59,6 +63,7 @@ lead = [
 manager = [
     path('manager/register/', ManagerRegisterView.as_view(), name='manager-register'),
     path('manager/login/', ManagerLoginView.as_view(), name='manager-login'),
+    path('manager/dashboard/', ManagerDashboardView.as_view(), name='manager-dashboard')
 ]
 
 admin = [

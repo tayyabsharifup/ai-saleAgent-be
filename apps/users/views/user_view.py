@@ -102,3 +102,12 @@ class ChangePasswordView(APIView):
         return Response({'message': 'Password changed successfully'}, status=HTTP_200_OK)
         
 
+class LoginUserView(APIView):
+    serializer_class = LoginSerializer
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            return Response(serializer.validated_data, status=HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=HTTP_401_UNAUTHORIZED)
+        

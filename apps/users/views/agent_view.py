@@ -95,6 +95,35 @@ class AgentCallAnalytics(APIView):
         emails_replied = ChatMessageHistory.objects.filter(lead__assign_to=agent, messageType='email', wroteBy='client').count()
         avg_reply_rate = (emails_replied / emails_sent * 100) if emails_sent > 0 else 0
 
+        weekly_reply_rates = []
+        today = timezone.now().date()
+        for i in range(4):
+            end_date = today - timedelta(days=i*7)
+            start_date = end_date - timedelta(days=6)
+
+            emails_sent_week = ChatMessageHistory.objects.filter(
+                lead__assign_to=agent,
+                messageType='email',
+                wroteBy__in=['agent', 'ai'],
+                created_at__date__range=[start_date, end_date]
+            ).count()
+
+            emails_replied_week = ChatMessageHistory.objects.filter(
+                lead__assign_to=agent,
+                messageType='email',
+                wroteBy='client',
+                created_at__date__range=[start_date, end_date]
+            ).count()
+
+            avg_reply_rate_week = (emails_replied_week / emails_sent_week * 100) if emails_sent_week > 0 else 0
+            
+            weekly_reply_rates.append({
+                'week': i + 1,
+                'start_date': start_date.isoformat(),
+                'end_date': end_date.isoformat(),
+                'avg_reply_rate': avg_reply_rate_week
+            })
+
         today = timezone.now().date()
         daily_analytics = []
         for i in range(7):
@@ -137,8 +166,9 @@ class AgentCallAnalytics(APIView):
             'follow_ups_this_week': follow_ups_this_week,
             'leads_added_this_week': leads_added_this_week,
             'daily_analytics': daily_analytics,
+            'avg_reply_rate': avg_reply_rate,
+            'weekly_reply_rates': weekly_reply_rates,
             'emails_sent': emails_sent,
             'emails_replied': emails_replied,
-            'avg_reply_rate': avg_reply_rate,
         }, status=HTTP_200_OK)
 

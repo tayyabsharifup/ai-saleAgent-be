@@ -2,6 +2,7 @@ from rest_framework import serializers
 from apps.users.models import AgentModel, ManagerModel, LeadModel
 from apps.aiModule.models import ChatMessageHistory
 from apps.aiModule.serializers import ChatMessageHistorySerializer
+from apps.users.serializers.lead_serializer import LeadPhoneSerializer, LeadEmailSerializer
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
@@ -82,6 +83,10 @@ class AgentProfileSerializer(serializers.ModelSerializer):
 
 class AgentDashboardSerializer(serializers.ModelSerializer):
     last_chat_message = serializers.SerializerMethodField()
+    lead_phone = LeadPhoneSerializer(
+        source='leadphonemodel_set', many=True, read_only=True)
+    lead_email = LeadEmailSerializer(
+        source='leademailmodel_set', many=True, read_only=True)
 
     class Meta:
         model = LeadModel

@@ -6,7 +6,9 @@ class Command(BaseCommand):
     help = "Refreshes the AI for all leads"
 
     def handle(self, *args, **options):
-        leads = LeadModel.objects.all()
+        # leads = LeadModel.objects.all()
+        # Those leads who's status != converted
+        leads = LeadModel.objects.filter(status__in=['in_progress', 'not_initiated', 'over_due'])
         for lead in leads:
             try:
                 self.stdout.write(self.style.SUCCESS(f"Refreshing AI for lead {lead.id}"))
