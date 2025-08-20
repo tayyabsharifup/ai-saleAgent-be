@@ -30,6 +30,7 @@ from .views.manager_view import (
     ManagerLoginView,
     ManagerRegisterView,
     ManagerDashboardView,
+    ManagerListView,
 )
 from .views.admin_view import (
     AdminLoginView
@@ -63,7 +64,8 @@ lead = [
 manager = [
     path('manager/register/', ManagerRegisterView.as_view(), name='manager-register'),
     path('manager/login/', ManagerLoginView.as_view(), name='manager-login'),
-    path('manager/dashboard/', ManagerDashboardView.as_view(), name='manager-dashboard')
+    path('manager/dashboard/', ManagerDashboardView.as_view(), name='manager-dashboard'),
+    path('manager/list/', ManagerListView.as_view(), name='manager-list'),
 ]
 
 admin = [
