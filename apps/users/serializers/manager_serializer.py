@@ -60,7 +60,7 @@ class ManagerLoginSerializer(serializers.ModelSerializer):
         user = authenticate(email=data['email'], password=data['password'])
 
         if not user:
-            raise serializers.ValidationError('Invalid Email or Password')
+            raise serializers.ValidationError('Invalid Email or Password or Status inactive')
         if user.role != 'manager':
             raise serializers.ValidationError(
                 'User does not have manager Role')

@@ -35,7 +35,8 @@ from .views.manager_view import (
     ManagerCallAnalytics,
 )
 from .views.admin_view import (
-    AdminLoginView
+    AdminLoginView,
+    ChangeStatusView,
 )
 
 user = [
@@ -74,6 +75,7 @@ manager = [
 
 admin = [
     path('admin/login/', AdminLoginView.as_view(), name='admin-login'),
+    path('admin/change-status/', ChangeStatusView.as_view(), name='change-status'),
 ]
 
 urlpatterns = [

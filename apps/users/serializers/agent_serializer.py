@@ -51,7 +51,7 @@ class AgentLoginSerializer(serializers.ModelSerializer):
         user = authenticate(email=data['email'], password=data['password'])
 
         if not user:
-            raise serializers.ValidationError('Invalid Email or Password')
+            raise serializers.ValidationError('Invalid Email or Password or Status inactive')
         if user.role != 'agent':
             raise serializers.ValidationError('User does not have agent Role')
 
