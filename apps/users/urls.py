@@ -30,7 +30,9 @@ from .views.manager_view import (
     ManagerLoginView,
     ManagerRegisterView,
     ManagerDashboardView,
-    ManagerListView,
+    ManagerLeadListView,
+    ManagerAgentListView,
+    ManagerCallAnalytics,
 )
 from .views.admin_view import (
     AdminLoginView
@@ -65,7 +67,9 @@ manager = [
     path('manager/register/', ManagerRegisterView.as_view(), name='manager-register'),
     path('manager/login/', ManagerLoginView.as_view(), name='manager-login'),
     path('manager/dashboard/', ManagerDashboardView.as_view(), name='manager-dashboard'),
-    path('manager/list/', ManagerListView.as_view(), name='manager-list'),
+    path('manager/lead-list/', ManagerLeadListView.as_view(), name='manager-list'),
+    path('manager/agent-list/', ManagerAgentListView.as_view(), name='manager-agent-list'),
+    path('manager/call-analytics/', ManagerCallAnalytics.as_view(), name='manager-call-analytics'),
 ]
 
 admin = [

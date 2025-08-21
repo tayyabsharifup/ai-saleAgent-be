@@ -11,13 +11,14 @@ from apps.users.serializers.agent_serializer import (
     AgentDashboardSerializer,
 )
 
-from rest_framework.permissions import IsAuthenticated
-from apps.users.permissions import IsAgent
+from apps.users.permissions import IsAgent, IsAdmin, IsManager
 from apps.users.models import AgentModel, LeadModel
 from apps.aiModule.models import ChatMessageHistory
 
 
 class RegisterAgentView(APIView):
+    permission_classes = [IsManager, IsAdmin]
+
     serializer_class = AgentRegisterSerializer
 
     def post(self, request):
@@ -40,7 +41,7 @@ class LoginAgentView(APIView):
 
 
 class AgentProfileView(APIView):
-    permission_classes = [IsAuthenticated, IsAgent]
+    permission_classes = [IsAgent]
     serializer_class = AgentProfileSerializer
 
     def get(self, request):
@@ -89,6 +90,7 @@ class AgentCallAnalytics(APIView):
                                                                         created_at__gte=timezone.now() - timedelta(days=7)).count()
         
         leads_added_this_week = LeadModel.objects.filter(
+            assign_to=agent,
             created_at__gte=timezone.now() - timedelta(days=7)).count()
 
         emails_sent = ChatMessageHistory.objects.filter(lead__assign_to=agent, messageType='email', wroteBy__in=['agent', 'ai']).count()
@@ -171,4 +173,6 @@ class AgentCallAnalytics(APIView):
             'emails_sent': emails_sent,
             'emails_replied': emails_replied,
         }, status=HTTP_200_OK)
+
+    
 

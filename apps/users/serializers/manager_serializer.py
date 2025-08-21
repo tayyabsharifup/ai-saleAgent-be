@@ -4,9 +4,11 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from apps.users.models.agent_model import AgentModel
 from apps.users.models.lead_model import LeadModel
 from apps.users.serializers.lead_serializer import LeadPhoneSerializer, LeadEmailSerializer
+
+from apps.aiModule.models import ChatMessageHistory
+
 
 
 User = get_user_model()
@@ -83,10 +85,14 @@ class ManagerLeadListSerializer(serializers.ModelSerializer):
         source='leadphonemodel_set', many=True, read_only=True)
     lead_email = LeadEmailSerializer(
         source='leademailmodel_set', many=True, read_only=True)
+    total_follow_ups = serializers.SerializerMethodField()
+
+    def get_total_follow_ups(self, obj):
+        return ChatMessageHistory.objects.filter(lead=obj, wroteBy='ai', follow_up_date__isnull=False).count()
 
     class Meta:
         model = LeadModel
-        fields = ('id', 'name',  'status', 'created_at', 'agent', 'lead_phone', 'lead_email')
+        fields = ('id', 'name',  'status', 'created_at', 'agent', 'lead_phone', 'lead_email', 'total_follow_ups')
 
     def get_agent(self, obj):
         return f"{obj.assign_to.user.first_name} {obj.assign_to.user.last_name}"
