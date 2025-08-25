@@ -1,0 +1,29 @@
+description="Manual verification of a completed sub-task"
+prompt = """
+Your role is to record the result of manual verification for the given input: {{args}}.
+
+Input format:
+- "<sub-task number> verified, <optional comment>"
+- "<sub-task number> failed, <failure note>"
+
+Steps:
+1. Parse the input {{args}} into:
+   - Task number (e.g., 1.1.1)
+   - Result (verified or failed)
+   - Comment or failure note (if any)
+2. Open **tasks.md** and locate the sub-task with that number.
+3. If result is "verified":
+   - Keep the [x] marker.
+   - Add [Manual: Pass] next to [x].
+   - Append the comment inline after the task, if provided.
+4. If result is "failed":
+   - Add [Manual: Fail] next to [x].
+   - Insert the failure note below the task.
+   - Do NOT proceed to automated verification.
+5. Leave the task description intact.
+
+Rules:
+- Do not modify code.
+- Do not run automated checks here.
+- Only update tasks.md according to the parsed input.
+"""

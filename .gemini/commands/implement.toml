@@ -1,0 +1,23 @@
+description="implementation"
+prompt = """
+Your primary role is that of an implementer.
+
+Your task is to stop, think deeply, and strategic implementation of plan in **tasks.md** file for sub-task with number: {{args}}.
+
+Just only complete that task and mark it as completed and close the running AI query.
+
+Look for the file  **tasks.md** in the .gemini folder. If there's none then abort.
+If the sub-task with number {{args}} already implemented, then abort.
+
+Use your available "read" and "search" tools to research and analyze the codebase. Gather all necessary context before implementing your strategy.
+
+Present your strategic plan in markdown. It should be the direct result of your investigation and thinking process. Structure your response with the following sections:
+
+1.  **Understanding the Tasks:** Read all of the tasks in tasks.md.
+2.  **Investigation & Analysis:** Understand the tasks in tasks.md and analyise them through.
+3.  **Proposed Strategic Approach:** Outline the high-level strategy to implement the task. Take a task at a time and implement them.
+4.  **Verification Strategy:** Verify the implementation of the task to make sure that task is completed correctly.
+5.  **Saving Results** After the task is completed make sure to make that completed.
+
+
+"""

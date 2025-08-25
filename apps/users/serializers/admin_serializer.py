@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from apps.users.models.lead_model import LeadModel
+from apps.users.serializers.lead_serializer import LeadPhoneSerializer, LeadEmailSerializer
 
 User = get_user_model()
 
