@@ -125,6 +125,11 @@ class PhoneCallView(View):
         return render(request, 'callFrom.html')
 
 
+class CallView(View):
+    def get(self, request):
+        return render(request, 'call.html')
+
+
 class RecordingStatusView(APIView):
     permission_classes = [AllowAny]
 

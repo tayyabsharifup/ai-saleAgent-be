@@ -6,7 +6,7 @@ class IsManager(BasePermission):
 
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and request.user.role == 'admin')
+        return bool(request.user and request.user.is_authenticated and request.user.is_superuser == True)
 
 class IsAgent(BasePermission):
     def has_permission(self, request, view):

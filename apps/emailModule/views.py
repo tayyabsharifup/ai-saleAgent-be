@@ -20,7 +20,7 @@ from apps.aiModule.utils.follow_up import refreshAI
 
 
 class SearchEmailView(APIView):
-    permission_classes = [IsAuthenticated, IsAgent]
+    permission_classes = [ IsAgent]
 
     def post(self, request):
         try:
@@ -46,7 +46,7 @@ class SearchEmailView(APIView):
 
 
 class SendEmailView(APIView):
-    permission_classes = [IsAuthenticated, IsAgent]
+    permission_classes = [ IsAgent]
 
     def post(self, request):
         try:
@@ -78,7 +78,7 @@ class SendEmailView(APIView):
 
 
 class FetchInboxView(APIView):
-    permission_classes = [IsAuthenticated, IsAgent]
+    permission_classes = [IsAgent]
 
     def post(self, request):
         # get user email and password from request.user

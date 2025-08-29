@@ -8,6 +8,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP
 
 from apps.users.serializers.admin_serializer import (
     AdminLoginSerializer,
+    TeamListSerializer,
 )
 
 from apps.users.serializers.manager_serializer import ManagerLeadListSerializer
@@ -71,10 +72,11 @@ class AdminTeamListView(APIView):
     permission_classes = [IsAdmin]
 
     def get(self, request):
-        agents = AgentModel.objects.all()
-        managers = ManagerModel.objects.all()
+        all_users_except_admin = CustomUser.objects.exclude(role='admin')
+        serializer = TeamListSerializer(all_users_except_admin, many=True)
+        return Response(serializer.data, status=HTTP_200_OK)
 
-        
+
         
 
 

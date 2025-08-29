@@ -1,4 +1,7 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
 from apps.users.models import AgentModel, ManagerModel, LeadModel
 from apps.aiModule.models import ChatMessageHistory
 from apps.aiModule.serializers import ChatMessageHistorySerializer
@@ -6,7 +9,8 @@ from apps.users.serializers.lead_serializer import LeadPhoneSerializer, LeadEmai
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
+
+import smtplib
 
 User = get_user_model()
 
@@ -37,6 +41,22 @@ class AgentRegisterSerializer(serializers.ModelSerializer):
         agent = AgentModel.objects.create(
             user=user, phone=phone, smtp_email=smtp_email, smtp_password=smtp_password, assign_manager=assign_manager)
         return agent
+    
+    def validate(self, data):
+        smtp_email = data.get('smtp_email')
+        smtp_password = data.get('smtp_password')
+
+        if not smtp_email or not smtp_password:
+            raise serializers.ValidationError("SMTP email and password are required.")
+
+        # try:
+        #     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+        #         server.login(smtp_email, smtp_password)
+        # except smtplib.SMTPAuthenticationError:
+        #     raise serializers.ValidationError("Invalid SMTP email or password.")
+
+        return data
+        
 
 
 class AgentLoginSerializer(serializers.ModelSerializer):
@@ -54,6 +74,7 @@ class AgentLoginSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Invalid Email or Password or Status inactive')
         if user.role != 'agent':
             raise serializers.ValidationError('User does not have agent Role')
+
 
         tokens = RefreshToken.for_user(user)
         return {

@@ -2,8 +2,6 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from apps.users.models.lead_model import LeadModel
-from apps.users.serializers.lead_serializer import LeadPhoneSerializer, LeadEmailSerializer
 
 User = get_user_model()
 
@@ -19,7 +17,7 @@ class AdminLoginSerializer(serializers.ModelSerializer):
 
         if not user:
             raise serializers.ValidationError('Invalid Email or Password')
-        if user.role != 'admin':
+        if user.is_superuser == False:
             raise serializers.ValidationError('User does not have admin Role')
         
         tokens = RefreshToken.for_user(user)
@@ -27,3 +25,19 @@ class AdminLoginSerializer(serializers.ModelSerializer):
             'refresh': str(tokens),
             'access': str(tokens.access_token)
         }
+
+class TeamListSerializer(serializers.ModelSerializer):
+    phone = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'first_name', 'last_name', 'role', 'is_active', 'date_joined', 'phone']
+    
+    def get_phone(self, obj):
+        try:
+            if obj.role == 'agent':
+                return obj.agentmodel.phone
+            else:
+                None
+        except:
+            return None

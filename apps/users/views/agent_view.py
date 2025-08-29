@@ -17,7 +17,7 @@ from apps.aiModule.models import ChatMessageHistory
 
 
 class RegisterAgentView(APIView):
-    permission_classes = [IsManager, IsAdmin]
+    permission_classes = [IsManager | IsAdmin]
 
     serializer_class = AgentRegisterSerializer
 
