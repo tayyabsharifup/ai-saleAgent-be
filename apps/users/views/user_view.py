@@ -1,3 +1,5 @@
+# import setting for debug
+from django.conf import settings
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -53,8 +55,18 @@ class SendOtpView(APIView):
         except:
             return Response({'message': 'User not found'}, status=HTTP_404_NOT_FOUND)
         
-        if user.generate_otp():
-            return Response({'message': 'OTP sent'}, status=HTTP_200_OK)
+        # if the debug is true in setting then return OTP sent 
+        if settings.DEBUG:
+            print(f"OTP for {email}: {user.otp}")
+            return Response({'message': 'OTP sent (DEBUG)'}, status=HTTP_200_OK)
+
+        try:
+
+            if user.generate_otp():
+                return Response({'message': 'OTP sent'}, status=HTTP_200_OK)
+        except:
+            return Response({'message': 'Error sending OTP'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+            
         else:
             return Response({'message': 'Error, OTP not sent'}, status=HTTP_503_SERVICE_UNAVAILABLE)
 

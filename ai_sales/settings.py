@@ -49,12 +49,14 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_APP_PASSWORD')
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
 
     # 3rd party packages
     'rest_framework',
@@ -69,6 +71,7 @@ INSTALLED_APPS = [
     'apps.home',
     'apps.emailModule',
     'apps.aiModule',
+    'apps.twilio_calls',
 ]
 
 MIDDLEWARE = [
@@ -98,7 +101,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'ai_sales.wsgi.application'
+# WSGI_APPLICATION = 'ai_sales.wsgi.application'
+ASGI_APPLICATION = 'ai_sales.asgi.application'
 
 
 # Database
@@ -209,4 +213,10 @@ LOGGING = {
             "style": "{",
         }
     },
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
 }

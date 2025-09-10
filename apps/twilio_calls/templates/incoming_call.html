@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twilio Incoming Call Receiver</title>
+    <script src="https://cdn.jsdelivr.net/npm/@twilio/voice-sdk@2.10.2/dist/twilio.min.js"></script>
+</head>
+<body>
+    <h1>Incoming Call Receiver</h1>
+    <button id="connectButton">Connect to Twilio</button>
+    <div id="status"></div>
+    <div id="callControls" style="display: none;">
+        <button id="acceptButton">Accept Call</button>
+        <button id="rejectButton">Reject Call</button>
+        <button id="hangupButton" disabled>Hang Up</button>
+    </div>
+
+    <script>
+        let device;
+        let currentConnection;
+
+        async function initDevice() {
+            try {
+                // Check microphone permissions first
+                document.getElementById('status').textContent = 'Checking microphone permissions...';
+                console.log('Checking microphone permissions...');
+
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        stream.getTracks().forEach(track => track.stop()); // Stop the test stream
+                        console.log('Microphone permission granted');
+                    } catch (error) {
+                        console.error('Microphone permission denied:', error);
+                        document.getElementById('status').textContent = 'Microphone permission required';
+                        return;
+                    }
+                }
+
+                document.getElementById('status').textContent = 'Fetching token...';
+                console.log('Fetching token from /calls/token/?identity=receiver');
+
+                const response = await fetch('/calls/token/?identity=receiver');
+                console.log('Token response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('Token received:', data.token ? 'Yes' : 'No');
+
+                if (!data.token) {
+                    throw new Error('No token received from server');
+                }
+
+                document.getElementById('status').textContent = 'Initializing Twilio Device...';
+                console.log('Creating Twilio Device...');
+
+                device = new Twilio.Device(data.token, {
+                    logLevel: 'debug'
+                });
+
+                device.on('ready', () => {
+                    console.log('Device ready');
+                    document.getElementById('status').textContent = 'Device ready to receive calls';
+                    document.getElementById('connectButton').style.display = 'none';
+                });
+
+                device.on('error', (error) => {
+                    console.error('Device error:', error);
+                    document.getElementById('status').textContent = 'Error: ' + error.message;
+                });
+
+                device.on('offline', () => {
+                    console.log('Device offline');
+                    document.getElementById('status').textContent = 'Device offline';
+                });
+
+                device.on('registered', () => {
+                    console.log('Device registered');
+                    document.getElementById('status').textContent = 'Device registered and ready';
+                });
+
+                device.on('unregistered', () => {
+                    console.log('Device unregistered');
+                });
+
+                // Explicitly register the device
+                console.log('Registering device...');
+                device.register();
+
+                device.on('incoming', (connection) => {
+                    console.log('Incoming call:', connection.parameters);
+                    currentConnection = connection;
+                    document.getElementById('status').textContent = `Incoming call from ${connection.parameters.From}`;
+                    document.getElementById('callControls').style.display = 'block';
+                });
+
+                device.on('connect', () => {
+                    console.log('Call connected');
+                    document.getElementById('status').textContent = 'Call connected';
+                    document.getElementById('hangupButton').disabled = false;
+                    document.getElementById('acceptButton').style.display = 'none';
+                    document.getElementById('rejectButton').style.display = 'none';
+                });
+
+                device.on('disconnect', () => {
+                    console.log('Call disconnected');
+                    document.getElementById('status').textContent = 'Call ended';
+                    document.getElementById('callControls').style.display = 'none';
+                    document.getElementById('hangupButton').disabled = true;
+                });
+
+                console.log('Device initialization complete');
+
+                // Add a timeout to check if device becomes ready
+                setTimeout(() => {
+                    if (device && !device.isInitialized) {
+                        console.log('Device still not ready after 10 seconds');
+                        document.getElementById('status').textContent = 'Device initialization timeout - check console for details';
+                    }
+                }, 10000);
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                document.getElementById('status').textContent = 'Failed to initialize: ' + error.message;
+            }
+        }
+
+        document.getElementById('connectButton').addEventListener('click', initDevice);
+
+        document.getElementById('acceptButton').addEventListener('click', () => {
+            if (currentConnection) {
+                currentConnection.accept();
+            }
+        });
+
+        document.getElementById('rejectButton').addEventListener('click', () => {
+            if (currentConnection) {
+                currentConnection.reject();
+                document.getElementById('callControls').style.display = 'none';
+            }
+        });
+
+        document.getElementById('hangupButton').addEventListener('click', () => {
+            if (currentConnection) {
+                currentConnection.disconnect();
+            }
+        });
+    </script>
+</body>
+</html>

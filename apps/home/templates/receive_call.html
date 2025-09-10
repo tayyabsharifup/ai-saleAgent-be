@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Twilio Incoming Call Receiver</title>
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/@twilio/voice-sdk@2.10.2/dist/twilio.min.js"></script>
+</head>
+
+<body>
+    <h1>Twilio Incoming Call Receiver</h1>
+    <button id="connectButton">Connect</button>
+    <div id="log"></div>
+
+    <script type="text/javascript">
+        const connectButton = document.getElementById('connectButton');
+        const logDiv = document.getElementById('log');
+        let device;
+
+        function log(message) {
+            logDiv.innerHTML += `<p>${message}</p>`;
+            console.log(message);
+        }
+
+        async function initializeDevice() {
+            log('Initializing Twilio Device...');
+            try {
+                // Check microphone permissions first
+                log('Checking microphone permissions...');
+                console.log('Checking microphone permissions...');
+
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        stream.getTracks().forEach(track => track.stop()); // Stop the test stream
+                        log('Microphone permission granted.');
+                        console.log('Microphone permission granted');
+                    } catch (error) {
+                        log('!!! Microphone permission denied. Please allow microphone access and try again.');
+                        console.error('Microphone permission denied:', error);
+                        return;
+                    }
+                } else {
+                    log('!!! getUserMedia not supported by this browser.');
+                    return;
+                }
+
+                log('Fetching token...');
+                console.log('Fetching token from /temp/token/?identity=browser-user');
+                
+                const response = await fetch('/temp/token/?identity=browser-user');
+                console.log('Token response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Token received:', data.token ? 'Yes' : 'No');
+                log('Token fetched successfully.');
+
+                if (!data.token) {
+                    throw new Error('No token received from server');
+                }
+
+                log('Creating Twilio Device...');
+                console.log('Creating Twilio Device...');
+
+                device = new Twilio.Device(data.token, {
+                    logLevel: 'debug'
+                });
+
+                device.on('ready', function() {
+                    log('>>> Twilio.Device is Ready! <<<');
+                    console.log('Device ready');
+                    connectButton.style.display = 'none';
+                });
+
+                device.on('error', function(error) {
+                    log('!!! Twilio.Device Error: ' + error.message);
+                    console.error('Device error:', error);
+                });
+
+                device.on('offline', function() {
+                    log('Device offline');
+                    console.log('Device offline');
+                });
+
+                device.on('registered', function() {
+                    log('>>> Device registered and ready to receive calls! <<<');
+                    console.log('Device registered');
+                });
+
+                device.on('unregistered', function() {
+                    log('Device unregistered');
+                    console.log('Device unregistered');
+                });
+
+                device.on('connect', function() {
+                    log('Call connected');
+                    console.log('Call connected');
+                });
+
+                device.on('disconnect', function() {
+                    log('Call ended');
+                    console.log('Call disconnected');
+                });
+
+                // Explicitly register the device
+                log('Registering device...');
+                console.log('Registering device...');
+                device.register();
+
+                device.on('incoming', function(connection) {
+                    log('Incoming call from: ' + connection.parameters.From);
+                    console.log('Incoming call:', connection.parameters);
+                    
+                    const acceptButton = document.createElement('button');
+                    acceptButton.innerText = 'Accept';
+                    acceptButton.onclick = function() {
+                        connection.accept();
+                        log('Call accepted.');
+                        console.log('Call accepted');
+                        acceptButton.remove();
+                        rejectButton.remove();
+                    };
+
+                    const rejectButton = document.createElement('button');
+                    rejectButton.innerText = 'Reject';
+                    rejectButton.onclick = function() {
+                        connection.reject();
+                        log('Call rejected.');
+                        console.log('Call rejected');
+                        acceptButton.remove();
+                        rejectButton.remove();
+                    };
+
+                    logDiv.appendChild(acceptButton);
+                    logDiv.appendChild(rejectButton);
+                });
+
+                // Add a timeout to check if device becomes ready
+                setTimeout(() => {
+                    if (device && !device.isInitialized) {
+                        log('!!! Device initialization timeout - check console for details');
+                        console.log('Device still not ready after 10 seconds');
+                    }
+                }, 10000);
+
+            } catch (error) {
+                log('!!! Error initializing: ' + error.message);
+                console.error('Initialization error:', error);
+            }
+        }
+
+        connectButton.addEventListener('click', initializeDevice);
+    </script>
+</body>
+
+</html>

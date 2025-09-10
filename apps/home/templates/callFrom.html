@@ -38,7 +38,7 @@
 
         async function fetchToken() {
             try {
-                const response = await fetch('/temp/token/?identity=web-user');
+                const response = await fetch('/temp/token/?identity=browser-user');
                 const data = await response.json()
                 return data.token;
             } catch (error) {
@@ -85,6 +85,47 @@
                     });
                 });
 
+                // Handle incoming calls (no ringtone)
+                device.on('incoming', function (connection) {
+                    log('Incoming call from: ' + connection.parameters.From);
+
+                    // Create accept/reject buttons dynamically
+                    const acceptButton = document.createElement('button');
+                    acceptButton.innerText = 'Accept';
+                    acceptButton.onclick = function () {
+                        connection.accept();
+                        log('Call accepted!');
+                        currentConnection = connection;
+                        callButton.style.display = 'none';
+                        hangupButton.style.display = 'inline-block';
+                        acceptButton.remove();
+                        rejectButton.remove();
+                    };
+
+                    const rejectButton = document.createElement('button');
+                    rejectButton.innerText = 'Reject';
+                    rejectButton.onclick = function () {
+                        connection.reject();
+                        log('Call rejected.');
+                        acceptButton.remove();
+                        rejectButton.remove();
+                    };
+
+                    logDiv.appendChild(acceptButton);
+                    logDiv.appendChild(rejectButton);
+
+                    connection.on('disconnect', function () {
+                        log('Incoming call disconnected.');
+                        resetUI();
+                    });
+
+                    connection.on('error', function (error) {
+                        log('Incoming call error: ' + error.message);
+                        resetUI();
+                    });
+                });
+
+
             } catch (error) {
                 log(`Error initializing Twilio.Device: ${error.message}`);
                 console.error("Error initializing device:", error);
@@ -129,7 +170,7 @@
             }
         });
 
-        hangupButton.addEventListener('click', function () {
+                hangupButton.addEventListener('click', function () {
             if (currentConnection) {
                 log('Hanging up...');
                 currentConnection.disconnect();
@@ -137,6 +178,12 @@
                 log('No active call to hang up.');
             }
         });
+
+        // Initialize the device on page load
+        (async () => {
+            await initializeDevice();
+            deviceInitialized = true;
+        })();
 
     </script>
 </body>

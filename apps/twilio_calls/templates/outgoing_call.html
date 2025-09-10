@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twilio Outgoing Call</title>
+    <script src="https://cdn.jsdelivr.net/npm/@twilio/voice-sdk@2.10.2/dist/twilio.min.js"></script>
+</head>
+<body>
+    <h1>Make an Outgoing Call</h1>
+    <input type="text" id="phoneNumber" placeholder="Enter phone number" />
+    <button id="callButton">Call</button>
+    <button id="hangupButton" disabled>Hang Up</button>
+    <div id="status"></div>
+
+    <script>
+        let device;
+        let connection;
+
+        async function initDevice() {
+            try {
+                const response = await fetch('/calls/token/');
+                const data = await response.json();
+                device = new Twilio.Device(data.token);
+
+                device.on('ready', () => {
+                    document.getElementById('status').textContent = 'Device ready';
+                });
+
+                device.on('error', (error) => {
+                    document.getElementById('status').textContent = 'Error: ' + error.message;
+                });
+
+                device.on('connect', () => {
+                    document.getElementById('status').textContent = 'Connected';
+                    document.getElementById('hangupButton').disabled = false;
+                });
+
+                device.on('disconnect', () => {
+                    document.getElementById('status').textContent = 'Disconnected';
+                    document.getElementById('hangupButton').disabled = true;
+                });
+
+            } catch (error) {
+                document.getElementById('status').textContent = 'Failed to initialize: ' + error.message;
+            }
+        }
+
+        document.getElementById('callButton').addEventListener('click', () => {
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            if (phoneNumber && device) {
+                connection = device.connect({ To: phoneNumber });
+            }
+        });
+
+        document.getElementById('hangupButton').addEventListener('click', () => {
+            if (connection) {
+                connection.disconnect();
+            }
+        });
+
+        initDevice();
+    </script>
+</body>
+</html>

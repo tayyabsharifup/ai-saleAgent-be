@@ -21,6 +21,8 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
+from django.conf import settings
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,9 +30,13 @@ urlpatterns = [
     path('temp/', include('apps.home.urls')),
     path('email/', include('apps.emailModule.urls')),
     path('ai/', include('apps.aiModule.urls')),
+    path('calls/', include('apps.twilio_calls.urls')),
 
     #API Docs
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger'),
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += staticfiles_urlpatterns()

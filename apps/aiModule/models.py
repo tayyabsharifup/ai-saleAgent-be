@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 from apps.users.models import LeadModel
+from apps.users.models.agent_model import AgentModel
+
 
 class ChatMessageHistory(models.Model):
     lead = models.ForeignKey(LeadModel, on_delete=models.CASCADE, blank=True, null=True)
@@ -22,3 +24,13 @@ class ChatMessageHistory(models.Model):
 
     def __str__(self):
         return f"{self.lead} - {self.created_at}"
+
+class NewLeadCall(models.Model):
+    is_map = models.BooleanField(default=False)
+    transcript = models.TextField(blank=True, null=True)
+    from_num = models.CharField(max_length=20, blank=True, null=True)
+    agent = models.ForeignKey(AgentModel, on_delete=models.SET_NULL, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Call from {self.from_num} - Mapped: {self.is_map}"

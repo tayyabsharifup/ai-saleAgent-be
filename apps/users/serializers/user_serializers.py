@@ -42,7 +42,17 @@ class LoginSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Invalid Email or Password or Status inactive')
 
         user_data = {}
-        if user.role == 'agent':
+        role = None
+        if user.is_superuser:
+            role = 'admin'
+            user_data = {
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+            }
+
+        elif user.role == 'agent':
+            role = 'agent'
             user_data = {
                 'agent_id': user.agentmodel.id,
                 'manager_id': user.agentmodel.assign_manager.id if user.agentmodel.assign_manager else None,
@@ -53,6 +63,7 @@ class LoginSerializer(serializers.ModelSerializer):
                 'smtp_email': user.agentmodel.smtp_email
             }
         elif user.role == 'manager':
+            role = 'manager'
             user_data = {
                 'manager_id': user.managermodel.id,
                 'email': user.email,
@@ -63,8 +74,6 @@ class LoginSerializer(serializers.ModelSerializer):
                 'selling_point': user.managermodel.selling_point,
                 'faq': user.managermodel.faq,
             }
-        elif user.role == 'admin':
-            pass
         else:
             raise serializers.ValidationError('Invalid Role')
 
@@ -72,7 +81,7 @@ class LoginSerializer(serializers.ModelSerializer):
         output_data = {
             'refresh': str(tokens),
             'access': str(tokens.access_token),
-            'role': user.role,
+            'role': role,
         }
         output_data = output_data | user_data
         return output_data

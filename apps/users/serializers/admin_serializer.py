@@ -23,7 +23,11 @@ class AdminLoginSerializer(serializers.ModelSerializer):
         tokens = RefreshToken.for_user(user)
         return {
             'refresh': str(tokens),
-            'access': str(tokens.access_token)
+            'access': str(tokens.access_token),
+            'role': 'admin',
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
         }
 
 class TeamListSerializer(serializers.ModelSerializer):

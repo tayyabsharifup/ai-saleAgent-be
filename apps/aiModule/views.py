@@ -4,9 +4,10 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 
-from apps.aiModule.models import ChatMessageHistory
-from apps.aiModule.serializers import ChatMessageHistorySerializer
+from apps.aiModule.models import ChatMessageHistory, NewLeadCall
+from apps.aiModule.serializers import ChatMessageHistorySerializer, NewLeadCallSerializer
 from apps.aiModule.utils.follow_up import refreshAI
+from apps.aiModule.utils.util_model import save_call_message
 
 from apps.users.models.lead_model import LeadModel
 from apps.users.permissions import IsAgent, IsManager, IsAdmin
@@ -76,3 +77,42 @@ class AddLeadInfo(APIView):
         except:
             return Response({'Error': 'Lead not found'}, status=status.HTTP_404_NOT_FOUND)
         return Response({'message': 'Lead Info Added'}, status=status.HTTP_200_OK)
+
+
+class UnmapCallView(APIView):
+
+    permission_classes = [IsAgent]
+
+    def get(self, request):
+        agent = request.user.agentmodel
+        newLeadCalls = NewLeadCall.objects.filter(agent=agent)
+        serializer = NewLeadCallSerializer(newLeadCalls, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        lead_id = request.data.get('lead_id', None)
+        newLeadCall_id = request.data.get('newLeadCall_id', None)
+
+        if not lead_id or not newLeadCall_id:
+            return Response({'Error': 'No lead_id or newLeadCall_id provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            lead = LeadModel.objects.get(id=lead_id)
+            # check if the lead is connected to the agent
+            if lead.assign_to != request.user.agentmodel:
+                return Response({'Error': 'Lead is not assigned to this agent'}, status=status.HTTP_400_BAD_REQUEST)
+            newLeadCall = NewLeadCall.objects.get(id=newLeadCall_id)
+
+            save_call_message(lead.id, newLeadCall.transcript)
+
+            refreshAI(lead.id)
+            newLeadCall.is_map = True
+            newLeadCall.save()
+            return Response({'message': 'Lead Mapped'}, status=status.HTTP_200_OK)
+
+        except LeadModel.DoesNotExist:
+            return Response({'Error': 'Lead not found'}, status=status.HTTP_404_NOT_FOUND)
+        except NewLeadCall.DoesNotExist:
+            return Response({'Error': 'NewLeadCall not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            raise e
