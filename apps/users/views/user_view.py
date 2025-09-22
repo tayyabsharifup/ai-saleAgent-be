@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import *
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.hashers import check_password
@@ -17,6 +18,9 @@ from apps.users.serializers.user_serializers import (
     RegisterSerializer,
 
 )
+from apps.users.models import AgentModel, ManagerModel
+
+from apps.users.permissions import IsAgent, IsManager, IsAdmin
 
 # Create your views here.
 
@@ -37,7 +41,57 @@ class VerifyOtpView(APIView):
             return Response({'message': 'User not Found'}, status=HTTP_404_NOT_FOUND)
         
         if user.verify_otp(otp):
-            return Response({'message': 'OTP verified successfully'}, status=HTTP_200_OK)
+            tokens = RefreshToken.for_user(user)
+            role = None
+            user_data = {}
+            if user.is_superuser:
+                role = 'admin'
+                user_data = {
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                }
+            elif user.role == 'agent':
+                role = 'agent'
+                try:
+                    agent = user.agentmodel
+                    user_data = {
+                        'agent_id': agent.id,
+                        'manager_id': agent.assign_manager.id if agent.assign_manager else None,
+                        'email': user.email,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                        'phone': agent.phone,
+                        'smtp_email': agent.smtp_email
+                    }
+                except AgentModel.DoesNotExist:
+                    return Response({'message': 'Agent profile not found'}, status=HTTP_404_NOT_FOUND)
+            elif user.role == 'manager':
+                role = 'manager'
+                try:
+                    manager = user.managermodel
+                    user_data = {
+                        'manager_id': manager.id,
+                        'email': user.email,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                        'language': manager.language,
+                        'offer': manager.offer,
+                        'selling_point': manager.selling_point,
+                        'faq': manager.faq,
+                    }
+                except ManagerModel.DoesNotExist:
+                    return Response({'message': 'Manager profile not found'}, status=HTTP_404_NOT_FOUND)
+            else:
+                return Response({'message': 'Invalid Role'}, status=HTTP_400_BAD_REQUEST)
+
+            output_data = {
+                'refresh': str(tokens),
+                'access': str(tokens.access_token),
+                'role': role,
+            }
+            output_data.update(user_data)
+            return Response(output_data, status=HTTP_200_OK)
         else:
             return Response({'message': 'Invalid or Expired OTP'}, status=HTTP_400_BAD_REQUEST)
         
@@ -72,23 +126,11 @@ class SendOtpView(APIView):
 
 
 class ResetPasswordWithOtpView(APIView):
-    serializer_class = ResetPasswordWithOtpSerializer
+    permission_classes = [IsManager | IsAdmin | IsAgent]
     def post(self, request):
-        email = request.data.get('email')
-        otp = request.data.get('otp')
         new_password = request.data.get('new_password')
+        user = request.user
 
-        if not all([email, otp, new_password]):
-            return Response({'message': 'Email, OTP and New Password are required'}, status=HTTP_400_BAD_REQUEST)
-        
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return Response({'message': 'User not found'}, status=HTTP_404_NOT_FOUND)
-        
-        if not user.verify_otp(otp):
-            return Response({'message': 'Invalid or expired OTP'}, status=HTTP_400_BAD_REQUEST)
-        
         user.set_password(new_password)
         user.save()
 

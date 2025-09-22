@@ -74,6 +74,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         from_email = settings.EMAIL_HOST_USER
         recipient = [self.email]
 
+        if settings.DEBUG:
+            print(f"OTP for {self.email}: {self.otp}")
+            return True
+
         response = send_mail(subject, message, from_email, recipient)
         if str(response) == '1':
             return True

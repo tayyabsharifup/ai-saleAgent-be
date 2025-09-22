@@ -66,6 +66,7 @@ class VoiceResponseView(APIView):
             response.say("Thanks for calling! No destination number provided.")
 
         # print(str(response))
+        print("Response from GET")
         return HttpResponse(str(response), content_type="text/xml")
 
     def post(self, request):
@@ -91,7 +92,7 @@ class VoiceResponseView(APIView):
             print(f"Error handling incoming call: {e}")
             response.say("We are sorry, an error occurred while connecting your call.")
 
-        print(str(response))
+        # print(str(response))
         return HttpResponse(str(response), content_type="text/xml")
 
 
