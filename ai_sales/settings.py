@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+from datetime import timedelta
+
 
 load_dotenv(override=True)
 
@@ -213,6 +215,11 @@ LOGGING = {
             "style": "{",
         }
     },
+}
+# increase acces token time to one day and incresae refersh token to 7 days
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 
 CHANNEL_LAYERS = {
