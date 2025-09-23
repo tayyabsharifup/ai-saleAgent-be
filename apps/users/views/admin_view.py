@@ -72,7 +72,8 @@ class AdminTeamListView(APIView):
     permission_classes = [IsAdmin]
 
     def get(self, request):
-        all_users_except_admin = CustomUser.objects.exclude(role='admin')
+        # all_users_except_admin = CustomUser.objects.exclude(role='admin')
+        all_users_except_admin = CustomUser.objects.exclude(is_superuser=True)
         serializer = TeamListSerializer(all_users_except_admin, many=True)
         return Response(serializer.data, status=HTTP_200_OK)
 
