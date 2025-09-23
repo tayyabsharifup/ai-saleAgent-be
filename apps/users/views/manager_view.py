@@ -55,8 +55,12 @@ class ManagerDashboardView(APIView):
             lead__assign_to__in=agents, messageType='call').count()
         total_follow_ups = ChatMessageHistory.objects.filter(
             lead__assign_to__in=agents, wroteBy='ai', follow_up_date__isnull=False).count()
-        average_lead_onboard = LeadModel.objects.filter(assign_to__in=agents, status='converted').count(
-        ) / LeadModel.objects.filter(assign_to__in=agents).count() * 100
+        # make sure that LeadModel query count do not equal to 0 so that we don't have the ZeroDivisionError
+        if LeadModel.objects.filter(assign_to__in=agents).count() == 0:
+            average_lead_onboard = 0
+        else:
+            average_lead_onboard = LeadModel.objects.filter(assign_to__in=agents, status='converted').count(
+            ) / LeadModel.objects.filter(assign_to__in=agents).count() * 100
 
         # Agent with the conversted Lead Number
 
