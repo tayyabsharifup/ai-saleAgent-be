@@ -101,6 +101,29 @@ class ManagerAgentListView(APIView):
         return Response(serializer.data, status=HTTP_200_OK)
 
 
+class ManagerShortSurveyView(APIView):
+    permission_classes = [IsManager]
+
+    def post(self, request):
+        manager = ManagerModel.objects.get(user=request.user)
+        language = request.data.get('language')
+        offer = request.data.get('offer')
+        selling_point = request.data.get('selling_point')
+        faq = request.data.get('faq')
+
+        if language:
+            manager.language = language
+        if offer:
+            manager.offer = offer
+        if selling_point:
+            manager.selling_point = selling_point
+        if faq:
+            manager.faq = faq
+
+        manager.save()
+
+        return Response({'message': 'Short survey updated successfully'}, status=HTTP_200_OK)
+
 
 class ManagerCallAnalytics(APIView):
     permission_classes = [IsManager]
