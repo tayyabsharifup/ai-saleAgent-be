@@ -1,6 +1,6 @@
 import os
 import requests
-from typing import List
+from typing import List, Tuple, Optional
 import webbrowser
 import msal
 from dotenv import load_dotenv
@@ -8,6 +8,99 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 MS_GRAPH_BASE_URL = 'https://graph.microsoft.com/v1.0'
+
+
+class OutlookEmail:
+    def __init__(self):
+        self.application_id = os.getenv("OUTLOOK_APPLICATION_ID")
+        self.client_secret = os.getenv("OUTLOOK_CLIENT_SECRET")
+        self.scopes = ['User.Read', 'Mail.Read', 'Mail.Send']
+
+    def get_access_token(self, refresh_token: str) -> Tuple[bool, str]:
+
+        client = msal.ConfidentialClientApplication(
+            client_id=self.application_id,
+            client_credential=self.client_secret,
+            authority='https://login.microsoftonline.com/consumers/'
+        )
+
+        token_response = client.acquire_token_by_refresh_token(
+            refresh_token, scopes=self.scopes
+        )
+
+        if 'access_token' in token_response:
+            return (True, token_response['access_token'])
+        else:
+            return (False, token_response['error_description'])
+
+    def get_outlook_all_email(self, access_token: str, limit: int) -> Tuple[bool, List[dict]]:
+        endpoint = f"{MS_GRAPH_BASE_URL}/me/messages"
+        headers = {
+            'Authorization': f'Bearer {access_token}'
+        }
+        try:
+            for i in range(0, 4, 2):
+                params = {
+                    '$top': 2,
+                    '$skip': i,
+                    '$orderby': 'receivedDateTime DESC',
+                    '$select': '*',
+                }
+            response = requests.get(endpoint, headers=headers, params=params)
+            if response.status_code != 200:
+                raise Exception(f'Failed to retrieve emails: {response.text}')
+
+            json_response = response.json()
+
+            return_response = []
+            for mail in json_response.get('value', []):
+                subject = mail.get("subject", "")
+                from_email = mail.get("from", {}).get(
+                    "emailAddress", {}).get("name", "")
+                received = mail.get("receivedDateTime", "")
+                body = mail.get("body", {}).get("content", "")
+
+                if from_email is None or from_email == '':
+                    continue
+
+                mail_dict = {
+                    'subject': subject,
+                    'from': from_email,
+                    'received': received,
+                    'body': body,
+                }
+
+                return_response.append(mail_dict)
+                print(f'Subject: {mail.get("subject", "")}')
+                print(
+                    f'From: {mail.get("from", {}).get("emailAddress", {}).get("name", "")}')
+                print(f'Received: {mail.get("receivedDateTime", "")}')
+                print(f'Body: {mail.get("body", {}).get("content", "")}')
+                print('---')
+            return (True, return_response)
+        except Exception as e:
+            return (False, str(e))
+
+
+def get_access_token_from_refresh_token(refresh_token):
+    application_id = os.getenv("OUTLOOK_APPLICATION_ID")
+    client_secret = os.getenv("OUTLOOK_CLIENT_SECRET")
+    scopes = ['User.Read', 'Mail.Read', 'Mail.Send']
+
+    client = msal.ConfidentialClientApplication(
+        client_id=application_id,
+        client_credential=client_secret,
+        authority='https://login.microsoftonline.com/consumers/'
+    )
+
+    token_response = client.acquire_token_by_refresh_token(
+        refresh_token, scopes=scopes
+    )
+
+    if 'access_token' in token_response:
+        return True, token_response['access_token']
+    else:
+        return False, token_response['error_description']
 
 
 def get_access_token(application_id: str, client_secret: str, scopes: List[str]) -> str:
@@ -104,14 +197,13 @@ def send_email(access_token: str, to_email: str, subject: str, body: str):
     }
 
     try:
-        response = requests.post(endpoint, headers=headers, json={'message': message})
+        response = requests.post(
+            endpoint, headers=headers, json={'message': message})
         if response.status_code != 202:
             raise Exception(f'Failed to send email: {response.text}')
-        print('Email sent successfully.')
+        print(f'Email sent successfully. status code {response.status_code}')
     except Exception as e:
         print('error', str(e))
-
-
 
 
 if __name__ == "__main__":
@@ -122,8 +214,9 @@ if __name__ == "__main__":
     try:
         access_token = get_access_token(application_id, client_secret, scopes)
         print("Access Token:", access_token)
-        get_all_email(access_token)
-        send_email(access_token, 'dawoodsiddique469@gmail.com', 'test outlook', 'test outlook')
+        print(get_all_email(access_token))
+        send_email(access_token, 'dawoodsiddique496@gmail.com',
+                   'test outlook', 'test outlook')
     except Exception as e:
         print("Error:", e)
         exit(1)

@@ -84,23 +84,28 @@ class FetchInboxView(APIView):
         # get user email and password from request.user
         try:
             agent = AgentModel.objects.get(user=request.user)
-            email = agent.smtp_email
-            password = agent.smtp_password
-            emails = fetch_emails(
-                from_email=email,
-                app_password=password,
-            )
-            print(
-                f'Messageid :-> {emails[0].headers.get('message-id', [''])[0]}')
+            if agent.email_provider == 'gmail':
+                email = agent.smtp_email
+                password = agent.smtp_password
+                emails = fetch_emails(
+                    from_email=email,
+                    app_password=password,
+                )
+                print(
+                    f'Messageid :-> {emails[0].headers.get('message-id', [''])[0]}')
 
-            results = [{
-                'subject': msg.subject,
-                'from': msg.from_,
-                'date': msg.date,
-                'body': msg.text or msg.html
-            } for msg in emails]
+                results = [{
+                    'subject': msg.subject,
+                    'from': msg.from_,
+                    'date': msg.date,
+                    'body': msg.text or msg.html
+                } for msg in emails]
+                return Response(results, status=HTTP_200_OK)
+            
+            elif agent.email_provider == 'outlook':
+                email = agent.smtp_email
+                password = agent.smtp_password
 
-            return Response(results, status=HTTP_200_OK)
         except AgentModel.DoesNotExist:
             return Response({'message': 'Agent profile not found'}, status=HTTP_404_NOT_FOUND)
 
