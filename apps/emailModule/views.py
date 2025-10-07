@@ -107,7 +107,7 @@ class FetchInboxView(APIView):
             elif agent.email_provider == 'outlook':
                 email = agent.smtp_email
                 password = agent.smtp_password
-                is_return, results = outlookEmail.get_outlook_all_email()
+                is_return, results = outlookEmail.get_outlook_all_email(password)
                 if not is_return:
                     return Response({'message': results}, status=HTTP_400_BAD_REQUEST)
                 return Response(results, status=HTTP_200_OK)

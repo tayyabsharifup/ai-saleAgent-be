@@ -33,7 +33,10 @@ class OutlookEmail:
         else:
             return (False, token_response['error_description'])
 
-    def get_outlook_all_email(self,  access_token: str, limit: int = 10) -> Tuple[bool, List[dict]]:
+    def get_outlook_all_email(self,  refresh_token: str, limit: int = 10) -> Tuple[bool, List[dict]]:
+        access_token = self.get_access_token(refresh_token)
+        if not access_token:
+            return (False, 'Failed to get access token')
         endpoint = f"{MS_GRAPH_BASE_URL}/me/messages"
         headers = {
             'Authorization': f'Bearer {access_token}'
@@ -121,10 +124,12 @@ def get_access_token(application_id: str, client_secret: str, scopes: List[str])
         with open('refresh_token.txt', 'r') as file:
             refresh_token = file.read().strip()
 
+    print(f"Refresh Token: {refresh_token}")
     if refresh_token:
         # Try to acquire a new access token using the refresh token
         token_response = client.acquire_token_by_refresh_token(
             refresh_token, scopes=scopes)
+        
     else:
         # No refresh token, proceed with the authorization code flow
         auth_request_url = client.get_authorization_request_url(scopes=scopes)
@@ -221,8 +226,8 @@ if __name__ == "__main__":
         access_token = get_access_token(application_id, client_secret, scopes)
         print("Access Token:", access_token)
         print(get_all_email(access_token))
-        send_email(access_token, 'dawoodsiddique496@gmail.com',
-                   'test outlook', 'test outlook')
+        # send_email(access_token, 'dawoodsiddique496@gmail.com',
+        #            'test outlook', 'test outlook')
     except Exception as e:
         print("Error:", e)
         exit(1)
