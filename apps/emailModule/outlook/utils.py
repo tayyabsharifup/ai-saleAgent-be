@@ -33,7 +33,7 @@ class OutlookEmail:
         else:
             return (False, token_response['error_description'])
 
-    def get_outlook_all_email(self, access_token: str, limit: int) -> Tuple[bool, List[dict]]:
+    def get_outlook_all_email(self,  access_token: str, limit: int = 10) -> Tuple[bool, List[dict]]:
         endpoint = f"{MS_GRAPH_BASE_URL}/me/messages"
         headers = {
             'Authorization': f'Bearer {access_token}'
@@ -59,8 +59,12 @@ class OutlookEmail:
                     "emailAddress", {}).get("name", "")
                 received = mail.get("receivedDateTime", "")
                 body = mail.get("body", {}).get("content", "")
+                id = mail.get('id')
 
                 if from_email is None or from_email == '':
+                    continue
+
+                if not id:
                     continue
 
                 mail_dict = {
@@ -68,15 +72,16 @@ class OutlookEmail:
                     'from': from_email,
                     'received': received,
                     'body': body,
+                    'id': mail.get('id'),
                 }
 
                 return_response.append(mail_dict)
-                print(f'Subject: {mail.get("subject", "")}')
-                print(
-                    f'From: {mail.get("from", {}).get("emailAddress", {}).get("name", "")}')
-                print(f'Received: {mail.get("receivedDateTime", "")}')
-                print(f'Body: {mail.get("body", {}).get("content", "")}')
-                print('---')
+                # print(f'Subject: {mail.get("subject", "")}')
+                # print(
+                #     f'From: {mail.get("from", {}).get("emailAddress", {}).get("name", "")}')
+                # print(f'Received: {mail.get("receivedDateTime", "")}')
+                # print(f'Body: {mail.get("body", {}).get("content", "")}')
+                # print('---')
             return (True, return_response)
         except Exception as e:
             return (False, str(e))
@@ -168,6 +173,7 @@ def get_all_email(access_token: str):
                 f'From: {mail.get("from", {}).get("emailAddress", {}).get("name", "")}')
             print(f'Received: {mail.get("receivedDateTime", "")}')
             print(f'Body: {mail.get("body", {}).get("content", "")}')
+            print(f'Id: {mail.get("id", "")}')
             print('---')
         return json_response
     except Exception as e:

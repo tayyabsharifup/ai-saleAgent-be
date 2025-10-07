@@ -14,10 +14,12 @@ from apps.users.models import LeadEmailModel
 from apps.aiModule.models import ChatMessageHistory
 from apps.aiModule.utils.follow_up import refreshAI
 
+from apps.emailModule.outlook import OutlookEmail
 
 
 # Create your models here.
 
+outlookEmail = OutlookEmail()
 
 class SearchEmailView(APIView):
     permission_classes = [ IsAgent]
@@ -105,6 +107,13 @@ class FetchInboxView(APIView):
             elif agent.email_provider == 'outlook':
                 email = agent.smtp_email
                 password = agent.smtp_password
+                is_return, results = outlookEmail.get_outlook_all_email()
+                if not is_return:
+                    return Response({'message': results}, status=HTTP_400_BAD_REQUEST)
+                return Response(results, status=HTTP_200_OK)
+            
+            return Response({'message': 'Invalid Request'}, status=HTTP_400_BAD_REQUEST)
+
 
         except AgentModel.DoesNotExist:
             return Response({'message': 'Agent profile not found'}, status=HTTP_404_NOT_FOUND)

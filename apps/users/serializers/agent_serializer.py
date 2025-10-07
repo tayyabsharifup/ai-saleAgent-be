@@ -22,11 +22,12 @@ class AgentRegisterSerializer(serializers.ModelSerializer):
     smtp_password = serializers.CharField(required=False, allow_blank=True)
     assign_manager = serializers.PrimaryKeyRelatedField(
         queryset=ManagerModel.objects.all(), required=False, allow_null=True, write_only=True)
+    email_provider = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = User
         fields = ['email', 'first_name', 'last_name', 'password',
-                  'phone', 'smtp_email', 'smtp_password', 'assign_manager']
+                  'phone', 'smtp_email', 'smtp_password', 'assign_manager', 'email_provider']
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -34,26 +35,33 @@ class AgentRegisterSerializer(serializers.ModelSerializer):
         smtp_email = validated_data.pop('smtp_email', '')
         smtp_password = validated_data.pop('smtp_password', '')
         assign_manager = validated_data.pop('assign_manager', None)
+        email_provider = validated_data.pop('email_provider', '')
+
 
         user = User.objects.create_user(
             **validated_data, password=password, role='agent', is_verified=True)
 
         agent = AgentModel.objects.create(
-            user=user, phone=phone, smtp_email=smtp_email, smtp_password=smtp_password, assign_manager=assign_manager)
+            user=user, phone=phone, smtp_email=smtp_email, smtp_password=smtp_password, assign_manager=assign_manager, email_provider=email_provider)
         return agent
     
     def validate(self, data):
         smtp_email = data.get('smtp_email')
         smtp_password = data.get('smtp_password')
+        email_provider = data.get('email_provider')
+
 
         if not smtp_email or not smtp_password:
             raise serializers.ValidationError("SMTP email and password are required.")
 
-        # try:
-        #     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-        #         server.login(smtp_email, smtp_password)
-        # except smtplib.SMTPAuthenticationError:
-        #     raise serializers.ValidationError("Invalid SMTP email or password.")
+        if email_provider == 'outlook':
+            pass
+        elif email_provider == 'gmail':
+            try:
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+                    server.login(smtp_email, smtp_password)
+            except smtplib.SMTPAuthenticationError:
+                raise serializers.ValidationError("Invalid SMTP email or password.")
 
         return data
         
