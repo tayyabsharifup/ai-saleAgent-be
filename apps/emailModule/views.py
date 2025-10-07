@@ -56,18 +56,25 @@ class SendEmailView(APIView):
             email = agent.smtp_email
             password = agent.smtp_password
             to_email = request.data['to_email']
+            subject = request.data['subject']
+            body = request.data['body']
+            email_provider = agent.email_provider
             # check if the to_email belong to the lead of the agent
 
             if not LeadEmailModel.objects.filter(lead__assign_to=agent, email=to_email):
                 return Response({'message': 'You can only send emails to leads assigned to you.'}, status=HTTP_400_BAD_REQUEST)
 
-            send_email(
-                from_email=email,
-                app_password=password,
-                to_email=to_email,
-                subject=request.data['subject'],
-                body=request.data['body']
-            )
+            if email_provider == 'gmail':
+                send_email(
+                    from_email=email,
+                    app_password=password,
+                    to_email=to_email,
+                    subject=request.data['subject'],
+                    body=request.data['body']
+                )
+            elif email_provider == 'outlook':
+                is_true, message = outlookEmail.send_outlook_email(password, to_email, subject, body)
+                
             return Response({'message': 'Email sent successfully'}, status=HTTP_200_OK)
         except AgentModel.DoesNotExist:
             return Response({'message': 'Agent profile not found'}, status=HTTP_404_NOT_FOUND)

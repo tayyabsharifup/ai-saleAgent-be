@@ -89,6 +89,43 @@ class OutlookEmail:
             return (True, return_response)
         except Exception as e:
             return (False, str(e))
+    
+    def send_outlook_email(self, refresh_token: str, to_email: str, subject: str, body: str) -> Tuple[bool, str]:
+        access_token = self.get_access_token(refresh_token)
+        if not access_token[0]:
+            return (False, access_token[1])
+        access_token_str = access_token[1]
+
+        message = {
+            'subject': subject,
+            'body': {
+                'contentType': 'Text',
+                'content': body
+            },
+            'toRecipients': [
+                {
+                    'emailAddress': {
+                        'address': to_email
+                    }
+                }
+            ]
+        }
+
+        endpoint = f"{MS_GRAPH_BASE_URL}/me/sendMail"
+        headers = {
+            'Authorization': f'Bearer {access_token_str}',
+            'Content-Type': 'application/json'
+        }
+
+        try:
+            response = requests.post(
+                endpoint, headers=headers, json={'message': message})
+            if response.status_code != 202:
+                return (False, f'Failed to send email: {response.text}')
+            return (True, 'Email sent successfully')
+        except Exception as e:
+            return (False, str(e))
+
 
 
 def get_access_token_from_refresh_token(refresh_token):
