@@ -124,6 +124,38 @@ class OutlookEmail:
         except Exception as e:
             return (False, str(e))
 
+    def search_outlook_email(self, refresh_token: str, from_email: str, limit: int = 10) -> Tuple[bool, List[dict]]:
+        access_token = self.get_access_token(refresh_token)
+        if not access_token[0]:
+            return (False, access_token[1])
+        access_token_str = access_token[1]
+        endpoint = f"{MS_GRAPH_BASE_URL}/me/mailFolders/inbox/messages?$filter=from/emailAddress/address eq '{from_email}'"
+        headers = {
+            'Authorization': f'Bearer {access_token_str}',
+            'Content-Type': 'application/json'
+        }
+
+        try:
+            response = requests.get(endpoint, headers=headers)
+            if response.status_code != 200:
+                return (False, f'Failed to search emails: {response.text}')
+
+            emails = response.json().get('value', [])
+            result = []
+            for email in emails:
+                result.append({
+                    'subject': email.get('subject', ''),
+                    'from': email.get('from', {}).get('emailAddress', {}).get('address', ''),
+                    'to': [recipient.get('emailAddress', {}).get('address', '') for recipient in email.get('toRecipients', [])],
+                    'received': email.get('receivedDateTime', ''),
+                    'body': email.get('body', {}).get('content', ''),
+                    'id': email.get('id', '')
+                })
+
+            return (True, result)
+        except Exception as e:
+            return (False, str(e))
+
 
 def get_access_token_from_refresh_token(refresh_token):
     application_id = os.getenv("OUTLOOK_APPLICATION_ID")

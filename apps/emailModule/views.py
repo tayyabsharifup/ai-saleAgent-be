@@ -41,7 +41,11 @@ class SearchEmailView(APIView):
                 return Response(results, status=HTTP_200_OK)
             
             elif email_provider == 'outlook':
-                pass
+                is_true, results = outlookEmail.search_outlook_email(password, to_email)
+                if is_true:
+                    return Response(results, status=HTTP_200_OK)
+
+            return Response({'message': 'Invalid Request'}, status=HTTP_400_BAD_REQUEST)
         except AgentModel.DoesNotExist:
             return Response({'message': 'Agent profile not found'}, status=HTTP_404_NOT_FOUND)
         except smtplib.SMTPAuthenticationError:
