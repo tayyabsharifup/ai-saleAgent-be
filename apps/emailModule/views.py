@@ -30,13 +30,18 @@ class SearchEmailView(APIView):
             email = agent.smtp_email
             password = agent.smtp_password
             to_email = request.data['to_email']
+            email_provider = agent.email_provider
             # folder = request.data.get('folder', 'INBOX')
-            if not LeadEmailModel.objects.filter(lead__assign_to=agent, email=to_email):
-                return Response({'message': 'You can only search emails to leads assigned to you.'}, status=HTTP_400_BAD_REQUEST)
+            if email_provider == 'gmail':
+                
+                if not LeadEmailModel.objects.filter(lead__assign_to=agent, email=to_email):
+                    return Response({'message': 'You can only search emails to leads assigned to you.'}, status=HTTP_400_BAD_REQUEST)
 
-            results = search_email_by_sender(email, password, to_email)
-
-            return Response(results, status=HTTP_200_OK)
+                results = search_email_by_sender(email, password, to_email)
+                return Response(results, status=HTTP_200_OK)
+            
+            elif email_provider == 'outlook':
+                pass
         except AgentModel.DoesNotExist:
             return Response({'message': 'Agent profile not found'}, status=HTTP_404_NOT_FOUND)
         except smtplib.SMTPAuthenticationError:
@@ -74,7 +79,7 @@ class SendEmailView(APIView):
                 )
             elif email_provider == 'outlook':
                 is_true, message = outlookEmail.send_outlook_email(password, to_email, subject, body)
-                
+
             return Response({'message': 'Email sent successfully'}, status=HTTP_200_OK)
         except AgentModel.DoesNotExist:
             return Response({'message': 'Agent profile not found'}, status=HTTP_404_NOT_FOUND)

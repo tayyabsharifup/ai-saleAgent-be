@@ -38,29 +38,33 @@ class OutlookEmail:
         if not access_token[0]:
             return (False, access_token[1])
         access_token_str = access_token[1]
-        endpoint = f"{MS_GRAPH_BASE_URL}/me/messages"
+        endpoint = f"{MS_GRAPH_BASE_URL}/me/mailFolders/inbox/messages"
         headers = {
             'Authorization': f'Bearer {access_token_str}'
         }
         try:
-            for i in range(0, 4, 2):
-                params = {
-                    '$top': 2,
-                    '$skip': i,
-                    '$orderby': 'receivedDateTime DESC',
-                    '$select': '*',
-                }
+            return_response = []
+            params = {
+                '$top': limit,
+                '$orderby': 'receivedDateTime DESC',
+            }
             response = requests.get(endpoint, headers=headers, params=params)
             if response.status_code != 200:
                 raise Exception(f'Failed to retrieve emails: {response.text}')
 
             json_response = response.json()
-
-            return_response = []
             for mail in json_response.get('value', []):
                 subject = mail.get("subject", "")
                 from_email = mail.get("from", {}).get(
-                    "emailAddress", {}).get("name", "")
+                    "emailAddress", {}).get("address", "")
+
+                # Handle cases with no recipients
+                to_recipients = mail.get("toRecipients", [])
+                to_email = ""
+                if to_recipients:
+                    to_email = to_recipients[0].get(
+                        "emailAddress", {}).get("address", "")
+
                 received = mail.get("receivedDateTime", "")
                 body = mail.get("body", {}).get("content", "")
                 id = mail.get('id')
@@ -74,22 +78,16 @@ class OutlookEmail:
                 mail_dict = {
                     'subject': subject,
                     'from': from_email,
+                    'to': to_email,
                     'received': received,
                     'body': body,
                     'id': mail.get('id'),
                 }
-
                 return_response.append(mail_dict)
-                # print(f'Subject: {mail.get("subject", "")}')
-                # print(
-                #     f'From: {mail.get("from", {}).get("emailAddress", {}).get("name", "")}')
-                # print(f'Received: {mail.get("receivedDateTime", "")}')
-                # print(f'Body: {mail.get("body", {}).get("content", "")}')
-                # print('---')
             return (True, return_response)
         except Exception as e:
             return (False, str(e))
-    
+
     def send_outlook_email(self, refresh_token: str, to_email: str, subject: str, body: str) -> Tuple[bool, str]:
         access_token = self.get_access_token(refresh_token)
         if not access_token[0]:
@@ -127,7 +125,6 @@ class OutlookEmail:
             return (False, str(e))
 
 
-
 def get_access_token_from_refresh_token(refresh_token):
     application_id = os.getenv("OUTLOOK_APPLICATION_ID")
     client_secret = os.getenv("OUTLOOK_CLIENT_SECRET")
@@ -162,12 +159,12 @@ def get_access_token(application_id: str, client_secret: str, scopes: List[str])
         with open('refresh_token.txt', 'r') as file:
             refresh_token = file.read().strip()
 
-    print(f"Refresh Token: {refresh_token}")
+    # print(f"Refresh Token: {refresh_token}")
     if refresh_token:
         # Try to acquire a new access token using the refresh token
         token_response = client.acquire_token_by_refresh_token(
             refresh_token, scopes=scopes)
-        
+
     else:
         # No refresh token, proceed with the authorization code flow
         auth_request_url = client.get_authorization_request_url(scopes=scopes)
@@ -262,7 +259,7 @@ if __name__ == "__main__":
 
     try:
         access_token = get_access_token(application_id, client_secret, scopes)
-        print("Access Token:", access_token)
+        # print("Access Token:", access_token)
         print(get_all_email(access_token))
         # send_email(access_token, 'dawoodsiddique496@gmail.com',
         #            'test outlook', 'test outlook')
