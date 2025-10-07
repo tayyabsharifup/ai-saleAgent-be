@@ -31,15 +31,16 @@ class OutlookEmail:
         if 'access_token' in token_response:
             return (True, token_response['access_token'])
         else:
-            return (False, token_response['error_description'])
+            return (False, token_response.get('error_description', 'Unknown error'))
 
     def get_outlook_all_email(self,  refresh_token: str, limit: int = 10) -> Tuple[bool, List[dict]]:
         access_token = self.get_access_token(refresh_token)
-        if not access_token:
-            return (False, 'Failed to get access token')
+        if not access_token[0]:
+            return (False, access_token[1])
+        access_token_str = access_token[1]
         endpoint = f"{MS_GRAPH_BASE_URL}/me/messages"
         headers = {
-            'Authorization': f'Bearer {access_token}'
+            'Authorization': f'Bearer {access_token_str}'
         }
         try:
             for i in range(0, 4, 2):
