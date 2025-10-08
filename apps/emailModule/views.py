@@ -144,13 +144,21 @@ class CheckNewEmail(APIView):
         for agent in agents:
             email = agent.smtp_email
             password = agent.smtp_password
-            # All the leads of the agent
+            email_provider = agent.email_provider
             leads = LeadEmailModel.objects.filter(lead__assign_to=agent)
+            # All the leads of the agent
             for lead in leads:
-                try:
-                    emails = search_email_by_sender(
-                        email, password, lead.email)
-                except MailboxLoginError:
+                if email_provider == 'gmail':
+                    try:
+                        emails = search_email_by_sender(
+                            email, password, lead.email)
+                    except MailboxLoginError:
+                        continue
+                elif email_provider == 'outlook':
+                    is_true, emails = outlookEmail.search_outlook_email(password, lead.email)
+                    if not is_true:
+                        continue
+                else:
                     continue
 
                 if emails:

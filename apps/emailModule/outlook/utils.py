@@ -81,7 +81,7 @@ class OutlookEmail:
                     'to': to_email,
                     'received': received,
                     'body': body,
-                    'id': mail.get('id'),
+                    'message-id': mail.get('id'),
                 }
                 return_response.append(mail_dict)
             return (True, return_response)
@@ -145,11 +145,18 @@ class OutlookEmail:
             for email in emails:
                 result.append({
                     'subject': email.get('subject', ''),
-                    'from': email.get('from', {}).get('emailAddress', {}).get('address', ''),
-                    'to': [recipient.get('emailAddress', {}).get('address', '') for recipient in email.get('toRecipients', [])],
+                    'from': (
+                        email.get('from', {})
+                        .get('emailAddress', {})
+                        .get('address', '')
+                    ),
+                    'to': (
+                        email.get('toRecipients', [{}])[0].get(
+                            'emailAddress', {}).get('address', '')
+                    ),
                     'received': email.get('receivedDateTime', ''),
                     'body': email.get('body', {}).get('content', ''),
-                    'id': email.get('id', '')
+                    'message-id': email.get('id', '')
                 })
 
             return (True, result)
