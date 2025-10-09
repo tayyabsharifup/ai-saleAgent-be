@@ -156,25 +156,29 @@ async def twilio_handler(twilio_ws):
         await twilio_ws.close()
 
 
-async def router(websocket, path):
+async def router(websocket):
+    path = websocket.request.path
     print(f"Incoming connection on path: {path}")
     if path == "/twilio":
         print("Starting Twilio handler")
         await twilio_handler(websocket)
 
-def main():
+async def main():
     # use this if using ssl
     # ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     # ssl_context.load_cert_chain('cert.pem', 'key.pem')
-    # server = websockets.serve(router, '0.0.0.0', 443, ssl=ssl_context)
+    # async with websockets.serve(router, '0.0.0.0', 443, ssl=ssl_context):
+    #     print("Server starting on wss://0.0.0.0:443")
+    #     await asyncio.Future()  # run forever
 
     # use this if not using ssl
-    server = websockets.serve(router, "localhost", 8000)
-    print("Server starting on ws://localhost:5000")
-
-    asyncio.get_event_loop().run_until_complete(server)
-    asyncio.get_event_loop().run_forever()
+    async with websockets.serve(router, "localhost", 5000):
+        print("Server starting on ws://localhost:5000")
+        await asyncio.Future()  # run forever
 
 
 if __name__ == "__main__":
-    sys.exit(main() or 0)
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        sys.exit(0)
