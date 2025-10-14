@@ -13,6 +13,8 @@ from imap_tools.errors import MailboxLoginError
 from apps.users.models import LeadEmailModel
 from apps.aiModule.models import ChatMessageHistory
 from apps.aiModule.utils.follow_up import refreshAI
+from apps.aiModule.models import ChatMessageHistory
+from apps.users.models import LeadModel
 
 from apps.emailModule.outlook import OutlookEmail
 
@@ -83,6 +85,17 @@ class SendEmailView(APIView):
                 )
             elif email_provider == 'outlook':
                 is_true, message = outlookEmail.send_outlook_email(password, to_email, subject, body)
+                if not is_true:
+                    return Response({'message': message}, status=HTTP_400_BAD_REQUEST)
+
+            chat_message = ChatMessageHistory.objects.create(
+                lead = LeadEmailModel.objects.get(lead__assign_to=agent, email=to_email).lead,
+                heading=subject,
+                body=body,
+                messageType='email',
+                aiType='human',
+                wroteBy='agent'
+            )
 
             return Response({'message': 'Email sent successfully'}, status=HTTP_200_OK)
         except AgentModel.DoesNotExist:

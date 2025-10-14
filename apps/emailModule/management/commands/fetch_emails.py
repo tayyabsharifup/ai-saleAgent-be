@@ -4,24 +4,35 @@ from apps.aiModule.models import ChatMessageHistory
 from apps.emailModule.utils import search_email_by_sender
 from apps.aiModule.utils.follow_up import refreshAI
 from imap_tools.errors import MailboxLoginError
+from apps.emailModule.outlook import OutlookEmail
 
 class Command(BaseCommand):
     help = "Fetches new emails from leads and updates the chat history"
 
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS("Starting to fetch new emails..."))
+        outlook_email = OutlookEmail()
         agents = AgentModel.objects.all()
         for agent in agents:
             self.stdout.write(self.style.SUCCESS(f"Fetching emails for agent {agent.user.email}"))
             email = agent.smtp_email
             password = agent.smtp_password
+            email_provider = agent.email_provider
             leads = LeadEmailModel.objects.filter(lead__assign_to=agent)
             for lead in leads:
                 self.stdout.write(f"Checking emails from lead {lead.email}")
-                try:
-                    emails = search_email_by_sender(email, password, lead.email)
-                except MailboxLoginError:
-                    self.stdout.write(self.style.ERROR(f"Login failed for agent {agent.user.email}"))
+                if email_provider == 'gmail':
+                    try:
+                        emails = search_email_by_sender(email, password, lead.email)
+                    except MailboxLoginError:
+                        self.stdout.write(self.style.ERROR(f"Login failed for agent {agent.user.email}"))
+                        continue
+                elif email_provider == 'outlook':
+                    is_true, emails = outlook_email.search_outlook_email(password, lead.email)
+                    if not is_true:
+                        self.stdout.write(self.style.ERROR(f"Failed to fetch emails for agent {agent.user.email} from Outlook"))
+                        continue
+                else:
                     continue
 
                 if emails:
