@@ -17,6 +17,7 @@ from .views.agent_view import (
     AgentProfileView,
     AgentDashboardView,
     AgentCallAnalytics,
+    UpdateAgentView,
 )
 
 from .views.lead_view import (
@@ -59,6 +60,7 @@ agent = [
     path('agent/profile/', AgentProfileView.as_view(), name='agent-profile'),
     path('agent/dashboard/', AgentDashboardView.as_view(), name='agent-dashboard'),
     path('agent/call-analytics/', AgentCallAnalytics.as_view(), name='agent-call-analytics'),
+    path('agent/update-profile/', UpdateAgentView.as_view(), name='agent-update-profile'),
 ]
 
 lead = [

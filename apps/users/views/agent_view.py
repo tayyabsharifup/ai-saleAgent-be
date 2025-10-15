@@ -9,12 +9,23 @@ from apps.users.serializers.agent_serializer import (
     AgentLoginSerializer,
     AgentProfileSerializer,
     AgentDashboardSerializer,
+    AgentUpdateProfileSerializer,
+    
 )
 
 from apps.users.permissions import IsAgent, IsAdmin, IsManager
 from apps.users.models import AgentModel, LeadModel
 from apps.aiModule.models import ChatMessageHistory
 
+class UpdateAgentView(APIView):
+    permission_classes = [IsAgent]
+    serializer_class = AgentUpdateProfileSerializer
+    def put(self, request):
+        serializer = AgentUpdateProfileSerializer(request.user.agentmodel, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Agent updated successfully'}, status=HTTP_200_OK)
+        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
 class RegisterAgentView(APIView):
     permission_classes = [IsManager | IsAdmin]

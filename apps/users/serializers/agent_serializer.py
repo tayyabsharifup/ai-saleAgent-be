@@ -11,8 +11,12 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 
 import smtplib
+from apps.emailModule.outlook import OutlookEmail
 
 User = get_user_model()
+outlook = OutlookEmail()
+
+
 
 
 class AgentRegisterSerializer(serializers.ModelSerializer):
@@ -55,7 +59,9 @@ class AgentRegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("SMTP email and password are required.")
 
         if email_provider == 'outlook':
-            pass
+            is_true, token = outlook.get_access_token(smtp_password)
+            if not is_true:
+                raise serializers.ValidationError("Invalid Outlook token")
         elif email_provider == 'gmail':
             try:
                 with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
@@ -66,6 +72,11 @@ class AgentRegisterSerializer(serializers.ModelSerializer):
         return data
         
 
+class AgentUpdateProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AgentModel
+        fields = '__all__'
+        read_only_fields = ['user',]
 
 class AgentLoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(write_only=True)
