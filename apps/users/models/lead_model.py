@@ -28,7 +28,7 @@ class LeadModel(models.Model):
 class LeadPhoneModel(models.Model):
     lead = models.ForeignKey(
         LeadModel, on_delete=models.CASCADE)
-    phone_number = models.CharField(max_length=20, blank=True, default='')
+    phone_number = models.CharField(max_length=20, blank=True, default='', unique=True)
     type = models.CharField(max_length=10, blank=True, default='')
 
     def __str__(self):
@@ -38,7 +38,7 @@ class LeadPhoneModel(models.Model):
 class LeadEmailModel(models.Model):
     lead = models.ForeignKey(
         LeadModel, on_delete=models.CASCADE)
-    email = models.CharField(max_length=100, blank=True, default='')
+    email = models.CharField(max_length=100, blank=True, default='', unique=True)
     type = models.CharField(max_length=10, blank=True, default='')
 
     def __str__(self):
