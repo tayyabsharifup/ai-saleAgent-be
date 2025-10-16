@@ -186,3 +186,10 @@ class CheckNewEmail(APIView):
                                 return Response({'Error': f'Error in refreshing Lead of id {lead.id}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({'message': 'No new emails found'}, status=HTTP_200_OK)
+
+class OutlookAuthTokenURLView(APIView):
+    permission_classes = [IsAgent]
+
+    def get(self, request):
+        url = outlookEmail.get_authroization_url()
+        return Response({'url': url}, status=HTTP_200_OK)
