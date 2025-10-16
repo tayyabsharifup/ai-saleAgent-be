@@ -246,6 +246,7 @@ class AITool:
                 "None": []
             
             You will decide either to make a call or send email and how many days later based on follow-up rules.
+            Also, keep in mind that we have the contact information like Email and Phone.
             Follow up date SHOULD be greater than 0.
         """
 

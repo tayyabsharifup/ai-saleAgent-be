@@ -119,6 +119,29 @@ class AgentProfileSerializer(serializers.ModelSerializer):
         model = AgentModel
         fields = ['id', 'email', 'first_name',
                   'last_name', 'phone', 'smtp_email']
+    
+    def validate(self, data):
+        smtp_email = data.get('smtp_email')
+        smtp_password = data.get('smtp_password')
+        email_provider = data.get('email_provider')
+
+
+        if not smtp_email or not smtp_password:
+            raise serializers.ValidationError("SMTP email and password are required.")
+
+        if email_provider == 'outlook':
+            is_true, token = outlook.get_access_token(smtp_password)
+            if not is_true:
+                raise serializers.ValidationError("Invalid Outlook token")
+        elif email_provider == 'gmail':
+            try:
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+                    server.login(smtp_email, smtp_password)
+            except smtplib.SMTPAuthenticationError:
+                raise serializers.ValidationError("Invalid SMTP email or password.")
+
+        return data
+        
 
 
 class AgentDashboardSerializer(serializers.ModelSerializer):
