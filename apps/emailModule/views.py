@@ -188,7 +188,6 @@ class CheckNewEmail(APIView):
         return Response({'message': 'No new emails found'}, status=HTTP_200_OK)
 
 class OutlookAuthTokenURLView(APIView):
-    permission_classes = [IsAgent]
 
     def get(self, request):
         url = outlookEmail.get_authroization_url()
