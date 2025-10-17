@@ -8,7 +8,8 @@ from datetime import timedelta
 
 from apps.users.serializers.manager_serializer import (
     ManagerLoginSerializer,
-    ManagerRegisterSerializer
+    ManagerRegisterSerializer,
+    ManagerProfileSerializer,
 )
 from apps.users.serializers.manager_serializer import ManagerLeadListSerializer
 from apps.users.serializers.agent_serializer import AgentProfileSerializer
@@ -127,6 +128,14 @@ class ManagerShortSurveyView(APIView):
         manager.save()
 
         return Response({'message': 'Short survey updated successfully'}, status=HTTP_200_OK)
+
+class GetAllManagerView(APIView):
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        managers = ManagerModel.objects.all()
+        serializer = ManagerProfileSerializer(managers, many=True)
+        return Response(serializer.data, status=HTTP_200_OK)
 
 
 class ManagerCallAnalytics(APIView):

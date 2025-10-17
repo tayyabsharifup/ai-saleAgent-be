@@ -192,3 +192,12 @@ class OutlookAuthTokenURLView(APIView):
     def get(self, request):
         url = outlookEmail.get_authroization_url()
         return Response({'url': url}, status=HTTP_200_OK)
+
+class OutlookRefreshTokenView(APIView):
+    def post(self, request):
+        authorization_code = request.data.get('authorization_code')
+        is_true, refresh_token = outlookEmail.get_refresh_token(authorization_code)
+        if is_true:
+            return Response({'refresh_token': refresh_token}, status=HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid authorization code'}, status=HTTP_400_BAD_REQUEST)

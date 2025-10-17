@@ -15,6 +15,11 @@ class OutlookEmail:
         self.application_id = os.getenv("OUTLOOK_APPLICATION_ID")
         self.client_secret = os.getenv("OUTLOOK_CLIENT_SECRET")
         self.scopes = ['User.Read', 'Mail.Read', 'Mail.Send']
+        self.client = msal.ConfidentialClientApplication(
+            client_id=self.application_id,
+            client_credential=self.client_secret,
+            authority='https://login.microsoftonline.com/consumers/'
+        )
 
     def get_authroization_url(self):
         client = msal.ConfidentialClientApplication(
@@ -24,6 +29,19 @@ class OutlookEmail:
         )
         auth_request_url = client.get_authorization_request_url(scopes=self.scopes)
         return auth_request_url
+    
+    def get_refresh_token(self, authorization_code: str) -> Tuple[bool, str]:
+        token_response = self.client.acquire_token_by_authorization_code(
+            code=authorization_code,
+            scopes=self.scopes
+        )
+
+        if 'access_token' in token_response:
+            if 'refresh_token' in token_response:
+                return (True, token_response['refresh_token'])
+        else:
+            return (False, token_response['error_description'])
+        
 
     def get_access_token(self, refresh_token: str) -> Tuple[bool, str]:
 
