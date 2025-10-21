@@ -1,0 +1,50 @@
+MoveAround
+Operated with a joystick from the basket
+
+MoveAround MA60
+Working Height: 6m
+Platform Size: 0.53m x 0.76m
+Weight: 466 kg
+Platform load: 150 kg
+
+MoveAround MA50
+Working Height: 5m
+Platform Size: 0.53m x 0.76m
+Weight: 331 kg
+Platform load: 150 kg
+
+MoveAround MA50-R
+Working Height: 5m
+Platform Size: 0.56m x 0.52m
+Weight: 343 kg
+Platform load: 150 kg
+
+PushAround
+Manually moved to where it's needed
+
+PushAround PA60
+Working Height: 6m
+Platform Size: 0.53m x 0.76m
+Weight: 466 kg
+Platform load: 150 kg
+
+PushAround PA50
+Working Height: 5m
+Platform Size: 0.53m x 0.76m
+Weight: 331 kg
+Platform load: 150 kg
+
+PushAround PA35
+Working Height: 5m
+Platform Size: 0.56m x 0.52m
+Weight: 343 kg
+Platform load: 150 kg
+
+StockPicker
+Drivable and has height-adjustable lifting table
+
+StockAround SP50
+Working Height: 5m
+Platform Size: 0.63m x 0.59m
+Weight: 386 kg
+Platform load: 165 kg

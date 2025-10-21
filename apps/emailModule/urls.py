@@ -5,6 +5,8 @@ from apps.emailModule.views import (
     CheckNewEmail,
     OutlookAuthTokenURLView,
     OutlookRefreshTokenView,
+    EmailTemplatesView,
+    EmailTemplateDetailView,
 )
 
 from django.urls import path
@@ -16,4 +18,6 @@ urlpatterns = [
     path('check_new_email/', CheckNewEmail.as_view(), name='check-new-email'),
     path('outlook_auth_url/', OutlookAuthTokenURLView.as_view(), name='outlook-auth-url'),
     path('outlook_refresh_token/', OutlookRefreshTokenView.as_view(), name='outlook-refresh-token'),
+    path('email_templates/', EmailTemplatesView.as_view(), name='email-templates'),
+    path('email_templates/<int:template_id>/', EmailTemplateDetailView.as_view(), name='email-template-detail'),
 ]

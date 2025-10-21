@@ -201,3 +201,36 @@ class OutlookRefreshTokenView(APIView):
             return Response({'refresh_token': refresh_token}, status=HTTP_200_OK)
         else:
             return Response({'error': 'Invalid authorization code'}, status=HTTP_400_BAD_REQUEST)
+
+
+from apps.emailModule.templates.template import get_templates, get_template_by_id
+
+
+class EmailTemplatesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Retrieve all email templates"""
+        try:
+            templates = get_templates()
+            return Response({
+                'templates': templates,
+                'count': len(templates)
+            }, status=HTTP_200_OK)
+        except Exception as e:
+            return Response({'message': f'Failed to retrieve templates: {e}'}, status=HTTP_400_BAD_REQUEST)
+
+
+class EmailTemplateDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, template_id):
+        """Retrieve a specific email template by ID"""
+        try:
+            template = get_template_by_id(template_id)
+            if template:
+                return Response(template, status=HTTP_200_OK)
+            else:
+                return Response({'message': 'Template not found'}, status=HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'message': f'Failed to retrieve template: {e}'}, status=HTTP_400_BAD_REQUEST)
