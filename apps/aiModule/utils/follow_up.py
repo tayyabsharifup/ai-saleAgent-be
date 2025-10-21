@@ -71,7 +71,7 @@ class AITool:
             ]
         }
 
-    def initialDecideNode(self, state: SalesState) -> Literal['initial_response', 'classifier', '__end__']:
+    def initialDecideNode(self, state: SalesState) -> Literal['classifier', '__end__']:
         if not self.messages:
             return END
         else:
@@ -321,7 +321,7 @@ class AITool:
     def _build_graph(self):
         # Building the state graph
         builder = StateGraph(SalesState)
-        # builder.add_node('initial_decide', self.initialDecideNode)
+        builder.add_node('initial_decide', self.initialDecideNode)
         # builder.add_node('initial_response', self.initialResponseNode)
         builder.add_node('classifier', self.interestNode)
         builder.add_node('follow_up', self.followUpNode)
