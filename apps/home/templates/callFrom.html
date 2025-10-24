@@ -38,7 +38,8 @@
 
         async function fetchToken() {
             try {
-                const response = await fetch('/temp/token/?identity=browser-user');
+                // const response = await fetch('https://aisales.duckdns.org/temp/token/?identity=browser-user/');
+                const response = await fetch('/temp/token/?identity=browser-user/');
                 const data = await response.json()
                 return data.token;
             } catch (error) {
@@ -146,7 +147,7 @@
                 return;
             }
             if (!fromNumber) {
-                alert('Please enter a from number.')
+                alert('Please enter a from number.');
                 return;
             }
             if (!deviceInitialized) {
@@ -162,9 +163,15 @@
                 return;
             }
 
+            // URL-encode "+" to "%2B" to preserve it in query params
+            // const encodedTo = phoneNumber.replace(/\+/g, '%2B');
+            // const encodedFrom = fromNumber.replace(/\+/g, '%2B');
+            const encodedTo = phoneNumber
+            const encodedFrom = fromNumber
+
             log(`Attempting to call ${phoneNumber}...`);
             try {
-                currentConnection = await device.connect({ params: { To: phoneNumber, From: fromNumber } });
+                currentConnection = await device.connect({ params: { To: encodedTo, From: encodedFrom } });
             } catch (error) {
                 log(`Error starting call: ${error.message}`);
             }

@@ -70,15 +70,32 @@ class VoiceResponseView(APIView):
         return HttpResponse(str(response), content_type="text/xml")
 
     def post(self, request):
-        """Handle incoming voice requests"""
+        """Handle both incoming and outgoing voice requests"""
         response = VoiceResponse()
-        # response.say("Thanks for calling")
+        caller = request.data.get('Caller', '')
+        direction = request.data.get('Direction')
+        print("Response from POST")
+        print(request.data)
 
-        try:
-            print(f"Response from POST: {request.data}")
-            to_number = request.GET.get("To")  # The Twilio number receiving the call
-
-            # Find agent by Twilio number
+        if caller.startswith('client:') or direction in ['outbound-api', 'outbound-dial']:
+            # Outbound call from browser SDK (check Caller for client-initiated)
+            print("Outbound call")
+            to_number = request.data.get('To')
+            from_number = request.data.get('From', twilioNumber)
+            if to_number:
+                response.dial(
+                    number=to_number,
+                    caller_id=from_number,
+                    record=True,
+                    recording_status_callback='/temp/recording-status/',
+                    recording_status_callback_method='POST'
+                )
+            else:
+                response.say("No destination number provided.")
+        elif direction == 'inbound':
+            # Incoming call to Twilio number
+            print("Inbound call")
+            to_number = request.data.get('To')  # The Twilio number receiving the call
             agent = AgentModel.objects.filter(phone=to_number).first()
             callback_url = '/temp/recording-status/'
             client_identity = "browser-user"
@@ -88,11 +105,10 @@ class VoiceResponseView(APIView):
 
             dial = response.dial(record=True, recording_status_callback=callback_url, recording_status_callback_method='POST')
             dial.client(client_identity)
-        except Exception as e:
-            print(f"Error handling incoming call: {e}")
-            response.say("We are sorry, an error occurred while connecting your call.")
+        else:
+            print("Unable to determine call direction.")
+            response.say("Unable to determine call direction.")
 
-        # print(str(response))
         return HttpResponse(str(response), content_type="text/xml")
 
 
@@ -201,12 +217,12 @@ class RecordingStatusView(APIView):
             except LeadModel.DoesNotExist:
                 return Response({'Error': 'Lead not found'}, status=HTTP_404_NOT_FOUND)
 
-            emailModel = LeadEmailModel.objects.filter(lead__id=lead_id).first()
-            if not emailModel:
-                return Response({'Error': 'Email not found For Summary'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+            # emailModel = LeadEmailModel.objects.filter(lead__id=lead_id).first()
+            # if not emailModel:
+            #     return Response({'Error': 'Email not found For Summary'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
-            if not send_summary_email(transcript.text, agent.smtp_email, agent.smtp_password, emailModel.email):
-                return Response({'Error': f'Email Summary not sent for Lead of id {lead_id}'})
+            # if not send_summary_email(transcript.text, agent.smtp_email, agent.smtp_password, emailModel.email):
+            #     return Response({'Error': f'Email Summary not sent for Lead of id {lead_id}'})
 
             try:
                 refreshAI(lead_id)
