@@ -67,15 +67,18 @@ class ManagerDashboardView(APIView):
 
         agents_stat = []
         for agent in agents:
+            converted_count = LeadModel.objects.filter(
+                assign_to=agent, status='converted').count()
+            total_leads_count = LeadModel.objects.filter(assign_to=agent).count()
+            print(f"Debug: Agent {agent.user.first_name} {agent.user.last_name} - Converted leads: {converted_count}, Total leads: {total_leads_count}")
             agent_stat = {
                 'agent': f"{agent.user.first_name} {agent.user.last_name}",
                 'total_calls': ChatMessageHistory.objects.filter(
                     lead__assign_to=agent, messageType='call').count(),
                 'total_follow_ups': ChatMessageHistory.objects.filter(
                     lead__assign_to=agent, wroteBy='ai', follow_up_date__isnull=False).count(),
-                'average_lead_onboard': LeadModel.objects.filter(
-                    assign_to=agent, status='converted').count() / LeadModel.objects.filter(assign_to=agent).count() * 100
-            
+                'average_lead_onboard': converted_count / total_leads_count * 100
+
             }
             agents_stat.append(agent_stat)
 
@@ -161,6 +164,7 @@ class ManagerCallAnalytics(APIView):
         
         emails_sent = ChatMessageHistory.objects.filter(lead__assign_to__in=agents, messageType='email', wroteBy__in=['agent', 'ai']).count()
         emails_replied = ChatMessageHistory.objects.filter(lead__assign_to__in=agents, messageType='email', wroteBy='client').count()
+        print(f"Debug Manager: Emails sent: {emails_sent}, Emails replied: {emails_replied}")
         avg_reply_rate = (emails_replied / emails_sent * 100) if emails_sent > 0 else 0
 
         weekly_reply_rates = []
