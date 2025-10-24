@@ -77,7 +77,7 @@ class ManagerDashboardView(APIView):
                     lead__assign_to=agent, messageType='call').count(),
                 'total_follow_ups': ChatMessageHistory.objects.filter(
                     lead__assign_to=agent, wroteBy='ai', follow_up_date__isnull=False).count(),
-                'average_lead_onboard': converted_count / total_leads_count * 100
+                'average_lead_onboard': converted_count / total_leads_count * 100 if total_leads_count > 0 else 0
 
             }
             agents_stat.append(agent_stat)
