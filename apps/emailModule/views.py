@@ -234,3 +234,45 @@ class EmailTemplateDetailView(APIView):
                 return Response({'message': 'Template not found'}, status=HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'message': f'Failed to retrieve template: {e}'}, status=HTTP_400_BAD_REQUEST)
+class EmailTemplateWithLead(APIView):
+    permission_classes = [IsAgent]
+
+    def get(self, request, lead_id):
+        """Retrieve all personalized email templates for a specific lead"""
+        try:
+            agent = AgentModel.objects.get(user=request.user)
+            lead = LeadModel.objects.get(id=lead_id, assign_to=agent)
+            templates = get_templates()
+
+            # Personalize all templates
+            lead_name = lead.name
+            your_name = f"{agent.user.first_name} {agent.user.last_name}".strip()
+            your_position = ""  # Not available in models
+            your_company = ""  # Not available in models
+            contact_info = agent.phone or agent.smtp_email
+
+            personalized_templates = []
+            for template in templates:
+                personalized_subject = template['subject'].replace('[Lead Name]', lead_name).replace('[Your Name]', your_name)
+                personalized_body = template['body'].replace('[Lead Name]', lead_name).replace('[Your Name]', your_name).replace('[Your Position]', your_position).replace('[Your Company]', your_company).replace('[Contact Information]', contact_info)
+
+                personalized_template = {
+                    'id': template['id'],
+                    'name': template['name'],
+                    'subject': personalized_subject,
+                    'body': personalized_body
+                }
+                personalized_templates.append(personalized_template)
+
+            return Response({
+                'templates': personalized_templates,
+                'count': len(personalized_templates)
+            }, status=HTTP_200_OK)
+
+        except AgentModel.DoesNotExist:
+            return Response({'message': 'Agent profile not found'}, status=HTTP_404_NOT_FOUND)
+        except LeadModel.DoesNotExist:
+            return Response({'message': 'Lead not found or not assigned to you'}, status=HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'message': f'Failed to retrieve personalized templates: {e}'}, status=HTTP_400_BAD_REQUEST)
+        

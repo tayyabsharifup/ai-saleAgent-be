@@ -7,6 +7,7 @@ from apps.emailModule.views import (
     OutlookRefreshTokenView,
     EmailTemplatesView,
     EmailTemplateDetailView,
+    EmailTemplateWithLead
 )
 
 from django.urls import path
@@ -20,4 +21,5 @@ urlpatterns = [
     path('outlook_refresh_token/', OutlookRefreshTokenView.as_view(), name='outlook-refresh-token'),
     path('email_templates/', EmailTemplatesView.as_view(), name='email-templates'),
     path('email_templates/<int:template_id>/', EmailTemplateDetailView.as_view(), name='email-template-detail'),
-]
+    path('email_template_with_lead/<int:lead_id>/', EmailTemplateWithLead.as_view(), name='email-template-with-lead'),
+    ]
