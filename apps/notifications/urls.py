@@ -6,6 +6,6 @@ from apps.notifications.views import (
 from django.urls import path
 
 urlpatterns = [
-    path('', NotificationView.as_view(), name='notifications'),
+    path('async/', NotificationView.as_view(), name='notifications'),
     path('firebase/', FirebaseNotificationView.as_view(), name='firebase-notifications'),
 ]

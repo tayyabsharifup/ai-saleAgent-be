@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'apps.home',
     'apps.emailModule',
     'apps.aiModule',
+    'apps.notifications',
     'apps.twilio_calls',
 ]
 

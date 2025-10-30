@@ -32,6 +32,7 @@ urlpatterns = [
     path('email/', include('apps.emailModule.urls')),
     path('ai/', include('apps.aiModule.urls')),
     path('calls/', include('apps.twilio_calls.urls')),
+    path('notifications/', include('apps.notifications.urls')),
 
     #API Docs
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
