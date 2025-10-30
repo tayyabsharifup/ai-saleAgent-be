@@ -201,7 +201,7 @@ LOGGING = {
         "console": {"class": "logging.StreamHandler"},
         "file": {
             "class": "logging.FileHandler",
-            "filename": "logs/general.log",
+            "filename": str(BASE_DIR / "logs/general.log"),
             "formatter": "verbose",
         },
     },
