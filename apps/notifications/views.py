@@ -25,6 +25,15 @@ class NotificationView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+class MarkAllNotificationsReadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Update all notifications for the authenticated user to is_read=True
+        updated_count = NotificationModel.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return Response({'message': f'{updated_count} notifications marked as read'}, status=status.HTTP_200_OK)
+
+
 class FirebaseNotificationView(APIView):
     permission_classes = [IsAuthenticated]
 
