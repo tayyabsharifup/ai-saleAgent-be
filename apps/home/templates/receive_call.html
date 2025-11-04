@@ -48,7 +48,7 @@
                 log('Fetching token...');
                 console.log('Fetching token from /temp/token/?identity=browser-user');
                 
-                const response = await fetch('/temp/token/?identity=browser-user');
+                const response = await fetch('/temp/token/?identity=agent-2');
                 console.log('Token response status:', response.status);
                 
                 if (!response.ok) {
@@ -73,6 +73,7 @@
                 device.on('ready', function() {
                     log('>>> Twilio.Device is Ready! <<<');
                     console.log('Device ready');
+                    console.log('Device state:', device.state);
                     connectButton.style.display = 'none';
                 });
 
@@ -89,6 +90,7 @@
                 device.on('registered', function() {
                     log('>>> Device registered and ready to receive calls! <<<');
                     console.log('Device registered');
+                    console.log('Device registration details:', device);
                 });
 
                 device.on('unregistered', function() {
@@ -114,10 +116,13 @@
                 device.on('incoming', function(connection) {
                     log('Incoming call from: ' + connection.parameters.From);
                     console.log('Incoming call:', connection.parameters);
-                    
+                    console.log('Connection object:', connection);
+
                     const acceptButton = document.createElement('button');
                     acceptButton.innerText = 'Accept';
                     acceptButton.onclick = function() {
+                        log('Attempting to accept call...');
+                        console.log('Accepting call...');
                         connection.accept();
                         log('Call accepted.');
                         console.log('Call accepted');
@@ -128,6 +133,8 @@
                     const rejectButton = document.createElement('button');
                     rejectButton.innerText = 'Reject';
                     rejectButton.onclick = function() {
+                        log('Rejecting call...');
+                        console.log('Rejecting call...');
                         connection.reject();
                         log('Call rejected.');
                         console.log('Call rejected');

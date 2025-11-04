@@ -102,6 +102,7 @@ class VoiceResponseView(APIView):
             if agent:
                 callback_url += f'?agent_id={agent.id}'
                 client_identity = f"agent-{agent.id}"
+            print(f"Agent found: {agent is not None}, Client identity: {client_identity}")
 
             dial = response.dial(record=True, recording_status_callback=callback_url, recording_status_callback_method='POST')
             dial.client(client_identity)
