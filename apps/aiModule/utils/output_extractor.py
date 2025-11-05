@@ -36,3 +36,4 @@ class ShouldFollowUp(BaseModel):
 class MessageResponse(BaseModel):
     heading: str = Field(description="Heading of the message.")
     body: str = Field(description="Body of the message.")
+    key_points: list[str] = Field(default_factory=list, description="Optional list of 3-4 key summary points from the chat history.")

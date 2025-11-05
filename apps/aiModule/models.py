@@ -15,6 +15,7 @@ class ChatMessageHistory(models.Model):
     wroteBy = models.CharField(max_length=10, choices=[('agent', 'agent'), ('client', 'client'), ('none', 'none'), ('ai', 'ai')], default='none')
     follow_up_date = models.DateField(blank=True, null=True)
     pid = models.CharField(max_length=100, blank=True, null=True) # Email Message id
+    key_points = models.JSONField(blank=True, null=True) # List of key summary points
 
 
 

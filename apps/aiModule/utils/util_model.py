@@ -24,7 +24,7 @@ def get_chat_message_by_id(lead_id):
     
 
 
-def add_chat_message(lead_id, heading, body, messageType='none', aiType='none', interestLevel='none', wroteBy='none', follow_up_day=0):
+def add_chat_message(lead_id, heading, body, messageType='none', aiType='none', interestLevel='none', wroteBy='none', follow_up_day=0, key_points=None):
     # create datefield from follow_up_day
     if follow_up_day == 0:
         follow_up_date = None
@@ -41,6 +41,7 @@ def add_chat_message(lead_id, heading, body, messageType='none', aiType='none', 
             interestLevel=interestLevel,
             wroteBy=wroteBy,
             follow_up_date=follow_up_date,
+            key_points=key_points,
         )
         return chat_message
     except LeadModel.DoesNotExist:
@@ -72,7 +73,8 @@ def save_ai_message(lead_id, state):
         aiType='ai',
         interestLevel=str(state.interest_level),
         wroteBy='ai',
-        follow_up_day=state.follow_up_date
+        follow_up_day=state.follow_up_date,
+        key_points=state.key_points
     )
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from langchain_core.messages import AIMessage
 from IPython.display import Image
 from typing import Literal
 from langgraph.graph import StateGraph, START, END
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from langchain_core.messages import SystemMessage
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
@@ -29,6 +29,7 @@ class SalesState(BaseModel):
     body: str = ""
     follow_up_date: int = 0
     contact_type: str = ""
+    key_points: list[str] = Field(default_factory=list)
 
 
 class AITool:
@@ -76,7 +77,7 @@ class AITool:
             return END
         else:
             llm = ChatOpenAI(
-                model='gpt-4.1-mini', temperature=0).with_structured_output(ShouldFollowUp)
+                model='gpt-5').with_structured_output(ShouldFollowUp)
             system_prompt = f"""
                 You are Expert Follow Up planner. By giving the list of the Message interaction between Client, Agent and AI module.
                 There would two scenario to which write a follow-up plan.
@@ -177,8 +178,8 @@ class AITool:
             selling_point = ''
             faq = ''
 
-        llm = ChatOpenAI(model='gpt-4.1-mini',
-                         temperature=0).with_structured_output(MessageResponse)
+        llm = ChatOpenAI(model='gpt-5'
+                          ).with_structured_output(MessageResponse)
         system_prompt = f"""
         Based on the prospect's interest level, generate a follow-up response
         It would be one of the following:
@@ -191,6 +192,8 @@ class AITool:
         Offer: {offer}
         Selling Point: {selling_point}
         FAQ: {faq}
+
+        Also, generate 3-4 key summary points from the chat message history.
 
         and here are products details:
             MoveAround
@@ -250,6 +253,7 @@ class AITool:
         if response:
             state.heading = response.heading
             state.body = response.body
+            state.key_points = response.key_points
             if not save_ai_message(self.lead_id, state):
                 raise Exception("Failed to save AI message")
         else:
