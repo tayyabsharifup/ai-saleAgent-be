@@ -105,4 +105,6 @@ class ManagerLeadListSerializer(serializers.ModelSerializer):
         fields = ('id', 'name',  'status', 'created_at', 'agent', 'lead_phone', 'lead_email', 'total_follow_ups')
 
     def get_agent(self, obj):
-        return f"{obj.assign_to.user.first_name} {obj.assign_to.user.last_name}"
+        if obj.assign_to:
+            return f"{obj.assign_to.user.first_name} {obj.assign_to.user.last_name}"
+        return "unassigned"
