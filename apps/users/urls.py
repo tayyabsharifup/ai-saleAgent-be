@@ -43,6 +43,7 @@ from .views.admin_view import (
     AdminLeadListView,
     AdminCallAnalyticsView,
     AdminTeamListView,
+    AdminDashboardView
 )
 
 user = [
@@ -88,6 +89,7 @@ admin = [
     path('admin/call-analytics/', AdminCallAnalyticsView.as_view(), name='admin-call-analytics'),
     path('admin/lead-list/', AdminLeadListView.as_view(), name='admin-lead-list'),
     path('admin/team-list/', AdminTeamListView.as_view(), name='admin-team-list'),
+    path('admin/dashboard/', AdminDashboardView.as_view(), name='admin-dashboard')
 ]
 
 urlpatterns = [

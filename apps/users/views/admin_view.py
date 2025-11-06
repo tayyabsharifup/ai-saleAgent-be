@@ -183,3 +183,46 @@ class AdminCallAnalyticsView(APIView):
             'emails_sent': emails_sent,
             'emails_replied': emails_replied,
         }, status=HTTP_200_OK)
+
+
+
+class AdminDashboardView(APIView):
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        agents = AgentModel.objects.all()
+        total_calls = ChatMessageHistory.objects.filter(
+            lead__assign_to__in=agents, messageType='call').count()
+        total_follow_ups = ChatMessageHistory.objects.filter(
+            lead__assign_to__in=agents, wroteBy='ai', follow_up_date__isnull=False).count()
+        # make sure that LeadModel query count do not equal to 0 so that we don't have the ZeroDivisionError
+        if LeadModel.objects.filter(assign_to__in=agents).count() == 0:
+            average_lead_onboard = 0
+        else:
+            average_lead_onboard = LeadModel.objects.filter(assign_to__in=agents, status='converted').count(
+            ) / LeadModel.objects.filter(assign_to__in=agents).count() * 100
+
+        # Agent with the conversted Lead Number
+
+        agents_stat = []
+        for agent in agents:
+            converted_count = LeadModel.objects.filter(
+                assign_to=agent, status='converted').count()
+            total_leads_count = LeadModel.objects.filter(assign_to=agent).count()
+            agent_stat = {
+                'agent': f"{agent.user.first_name} {agent.user.last_name}",
+                'total_calls': ChatMessageHistory.objects.filter(
+                    lead__assign_to=agent, messageType='call').count(),
+                'total_follow_ups': ChatMessageHistory.objects.filter(
+                    lead__assign_to=agent, wroteBy='ai', follow_up_date__isnull=False).count(),
+                'average_lead_onboard': converted_count / total_leads_count * 100 if total_leads_count > 0 else 0
+
+            }
+            agents_stat.append(agent_stat)
+
+        return Response({
+            'total_calls': total_calls,
+            'total_follow_ups': total_follow_ups,
+            'average_lead_onboard': average_lead_onboard,
+            'agents_stat': agents_stat
+        }, status=HTTP_200_OK)
