@@ -3,7 +3,7 @@ from apps.aiModule.utils.output_extractor import MessageResponse
 from apps.emailModule.utils import send_email
 
 def summary(context):
-    llm = ChatOpenAI(model='gpt-4.1-mini', temperature=0).with_structured_output(MessageResponse)
+    llm = ChatOpenAI(model='gpt-4.1-mini').with_structured_output(MessageResponse)
     system_prompt = f"""
         You're expert content writer. You will be given a the text of call.
         Your job is to create short summary of the call capturing important points.

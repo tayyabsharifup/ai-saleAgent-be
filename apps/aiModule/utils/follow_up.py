@@ -139,8 +139,7 @@ class AITool:
     #     return state
 
     def interestNode(self, state: SalesState):
-        llm = ChatOpenAI(model='gpt-5',
-                         temperature=0).with_structured_output(InterestLevel)
+        llm = ChatOpenAI(model='gpt-5').with_structured_output(InterestLevel)
         system_prompt = """
         Analyze the following sales conversation and classify the prospect's interest level into exactly one of these categories:
         
@@ -267,7 +266,7 @@ class AITool:
 
     def followUpNode(self, state: SalesState):
         llm = ChatOpenAI(
-            model='gpt-5', temperature=0).with_structured_output(FollowUpPlan)
+            model='gpt-5').with_structured_output(FollowUpPlan)
         system_prompt = """
             You are AI-Assistant for Sales Agent.
             You are generating a follow-up response for Sales Agent to the client. 
