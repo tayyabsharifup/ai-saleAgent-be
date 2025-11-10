@@ -218,12 +218,15 @@ class RecordingStatusView(APIView):
             except LeadModel.DoesNotExist:
                 return Response({'Error': 'Lead not found'}, status=HTTP_404_NOT_FOUND)
 
-            # emailModel = LeadEmailModel.objects.filter(lead__id=lead_id).first()
-            # if not emailModel:
-            #     return Response({'Error': 'Email not found For Summary'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+            emailModel = LeadEmailModel.objects.filter(lead__id=lead_id).first()
+            if not emailModel:
+                return Response({'Error': 'Email not found For Summary'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
-            # if not send_summary_email(transcript.text, agent.smtp_email, agent.smtp_password, emailModel.email):
-            #     return Response({'Error': f'Email Summary not sent for Lead of id {lead_id}'})
+            try:
+                if not send_summary_email(transcript.text, agent.smtp_email, agent.smtp_password, emailModel.email):
+                    return Response({'Error': f'Email Summary not sent for Lead of id {lead_id}'})
+            except Exception as e:
+                return Response({'Error': f'Error in sending summary email'})
 
             try:
                 refreshAI(lead_id)

@@ -139,15 +139,20 @@ class AITool:
     #     return state
 
     def interestNode(self, state: SalesState):
-        llm = ChatOpenAI(model='gpt-4.1-mini',
+        llm = ChatOpenAI(model='gpt-5',
                          temperature=0).with_structured_output(InterestLevel)
         system_prompt = """
         Analyze the following sales conversation and classify the prospect's interest level into exactly one of these categories:
         
-        SHORT: High interest - prospect shows clear buying signals, asks specific questions about pricing/closing, mentions timeline
-        MID: Moderate interest - prospect shows some interest but has questions or concerns, needs more information
-        LONG: Low interest - prospect is just exploring options, no clear commitment signals, general inquiries
-        None: No interest - prospect explicitly states they are not interested or does not respond positively
+        SHORT: 
+            High interest - prospect shows clear buying signals, asks specific questions about pricing/closing, mentions timeline
+        MID: 
+            Moderate interest - prospect shows some interest but has questions or concerns, needs more information
+        LONG: 
+            Low interest - prospect is just exploring options, no clear commitment signals, general inquiries
+        None: 
+            1. No interest - prospect explicitly states they are not interested or does not respond positively.
+            2. No conversation or very little conversation is there with the lead
 
         Make sure to keep the classification consistent with the conversation context
         And do not change the interest level unless there is a clear indication of a change in the prospect's engagement or interest.
@@ -262,7 +267,7 @@ class AITool:
 
     def followUpNode(self, state: SalesState):
         llm = ChatOpenAI(
-            model='gpt-4.1', temperature=0).with_structured_output(FollowUpPlan)
+            model='gpt-5', temperature=0).with_structured_output(FollowUpPlan)
         system_prompt = """
             You are AI-Assistant for Sales Agent.
             You are generating a follow-up response for Sales Agent to the client. 
