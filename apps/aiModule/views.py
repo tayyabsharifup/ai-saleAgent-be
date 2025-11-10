@@ -150,21 +150,21 @@ class RefreshAgentView(APIView):
                     emails = search_email_by_sender(email, password, lead.email)
                 except MailboxLoginError:
                     print(f"Login failed for agent {agent.user.email}")
-                    continue
+                    return Response({'Error': f"Login failed for agent {agent.user.email}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             elif email_provider == 'outlook':
                 is_true, emails = outlook_email.search_outlook_email(password, lead.email)
                 if not is_true:
                     print(f"Failed to fetch emails for agent {agent.user.email} from Outlook")
-                    continue
+                    return Response({'Error': f"Failed to fetch emails for agent {agent.user.email} from Outlook"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             else:
                 print(f"Unsupported email provider {email_provider} for agent {agent.user.email}")
-                continue
+                return Response({'Error': f"Unsupported email provider {email_provider}"}, status=status.HTTP_400_BAD_REQUEST)
 
             if emails:
                 for email_data in emails:
                     message_id = email_data['message-id']
                     if not ChatMessageHistory.objects.filter(pid=message_id).exists():
-                        self.stdout.write(self.style.SUCCESS(f"New email found from {lead.email} with subject: {email_data['subject']}"))
+                        print(f"New email found from {lead.email} with subject: {email_data['subject']}")
                         ChatMessageHistory.objects.create(
                             lead=lead.lead,
                             heading=email_data['subject'],
@@ -175,10 +175,10 @@ class RefreshAgentView(APIView):
                             pid=message_id
                         )
                         try:
-                            self.stdout.write(f"Refreshing AI for lead {lead.lead.id}")
+                            print(f"Refreshing AI for lead {lead.lead.id}")
                             refreshAI(lead.lead.id)
                         except Exception as e:
-                            self.stdout.write(self.style.ERROR(f"Error refreshing AI for lead {lead.lead.id}: {e}"))
+                            return Response(f"Error refreshing AI for lead {lead.lead.id}: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Now refresh AI for all leads assigned to this specific agent with status != converted
         agent_leads = LeadModel.objects.filter(
@@ -191,7 +191,7 @@ class RefreshAgentView(APIView):
         else:
             for lead in agent_leads:
                 try:
-                    self.stdout.write(self.style.SUCCESS(f"Refreshing AI for lead {lead.id}"))
+                    print(self.style.SUCCESS(f"Refreshing AI for lead {lead.id}"))
                     refreshAI(lead.id)
                 except Exception as e:
                     return Response(f"Error refreshing AI for lead {lead.id}: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
