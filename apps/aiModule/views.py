@@ -191,7 +191,7 @@ class RefreshAgentView(APIView):
         else:
             for lead in agent_leads:
                 try:
-                    print(self.style.SUCCESS(f"Refreshing AI for lead {lead.id}"))
+                    print(f"Refreshing AI for lead {lead.id}")
                     refreshAI(lead.id)
                 except Exception as e:
                     return Response(f"Error refreshing AI for lead {lead.id}: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
