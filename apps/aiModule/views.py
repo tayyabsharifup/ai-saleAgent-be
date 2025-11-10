@@ -13,6 +13,14 @@ from apps.users.models.lead_model import LeadModel
 from apps.users.permissions import IsAgent, IsManager, IsAdmin
 
 
+from apps.users.models import LeadEmailModel
+from apps.users.models.lead_model import LeadModel
+from apps.aiModule.models import ChatMessageHistory
+from apps.emailModule.utils import search_email_by_sender
+from apps.aiModule.utils.follow_up import refreshAI
+from imap_tools.errors import MailboxLoginError
+from apps.emailModule.outlook import OutlookEmail
+
 # Create your views here.
 
 class chatHistoryView(generics.ListCreateAPIView):
@@ -116,3 +124,76 @@ class UnmapCallView(APIView):
             return Response({'Error': 'NewLeadCall not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             raise e
+
+class RefreshAgentView(APIView):
+    permission_classes = [IsAgent]
+
+    def get(self, request):
+        agent = request.user.agentmodel
+
+        outlook_email = OutlookEmail()
+        email = agent.smtp_email
+        password = agent.smtp_password
+        email_provider = agent.email_provider
+        
+        # Get leads for this specific agent
+        leads = LeadEmailModel.objects.filter(lead__assign_to=agent)
+        
+        if not leads.exists():
+            print(f"No leads found for agent {agent.user.email}")
+            return Response({'message': f"No leads found for agent {agent.user.email}"}, status=status.HTTP_200_OK)
+
+        for lead in leads:
+            print(f"Checking emails from lead {lead.email}")
+            if email_provider == 'gmail':
+                try:
+                    emails = search_email_by_sender(email, password, lead.email)
+                except MailboxLoginError:
+                    print(f"Login failed for agent {agent.user.email}")
+                    continue
+            elif email_provider == 'outlook':
+                is_true, emails = outlook_email.search_outlook_email(password, lead.email)
+                if not is_true:
+                    print(f"Failed to fetch emails for agent {agent.user.email} from Outlook")
+                    continue
+            else:
+                print(f"Unsupported email provider {email_provider} for agent {agent.user.email}")
+                continue
+
+            if emails:
+                for email_data in emails:
+                    message_id = email_data['message-id']
+                    if not ChatMessageHistory.objects.filter(pid=message_id).exists():
+                        self.stdout.write(self.style.SUCCESS(f"New email found from {lead.email} with subject: {email_data['subject']}"))
+                        ChatMessageHistory.objects.create(
+                            lead=lead.lead,
+                            heading=email_data['subject'],
+                            body=email_data['body'],
+                            messageType='email',
+                            aiType='human',
+                            wroteBy='client',
+                            pid=message_id
+                        )
+                        try:
+                            self.stdout.write(f"Refreshing AI for lead {lead.lead.id}")
+                            refreshAI(lead.lead.id)
+                        except Exception as e:
+                            self.stdout.write(self.style.ERROR(f"Error refreshing AI for lead {lead.lead.id}: {e}"))
+
+        # Now refresh AI for all leads assigned to this specific agent with status != converted
+        agent_leads = LeadModel.objects.filter(
+            assign_to=agent,
+            status__in=['in_progress', 'not_initiated', 'over_due']
+        )
+        
+        if not agent_leads.exists():
+            print(f"No leads with active status found for agent {agent.user.email}")
+        else:
+            for lead in agent_leads:
+                try:
+                    self.stdout.write(self.style.SUCCESS(f"Refreshing AI for lead {lead.id}"))
+                    refreshAI(lead.id)
+                except Exception as e:
+                    return Response(f"Error refreshing AI for lead {lead.id}: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    
+        return Response({'message': f"Finished fetching emails and refreshing AI for agent {agent.user.email}."}, status=status.HTTP_200_OK)
