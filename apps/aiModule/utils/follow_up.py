@@ -197,8 +197,6 @@ class AITool:
         Selling Point: {selling_point}
         FAQ: {faq}
 
-        Also, generate 3-4 key summary points from the chat message history.
-
         and here are products details:
             MoveAround
             Operated with a joystick from the basket
@@ -250,6 +248,9 @@ class AITool:
             Platform Size: 0.63m x 0.59m
             Weight: 386 kg
             Platform load: 165 kg
+
+        Also, generate 3-4 MAX key summary points from the chat message history.
+        In case of Call make sure to keep body consise, Do not add unnessary info. Keep the body which are point up to date. Up to 5-8 points MAX.
         """
         system_message = SystemMessage(content=system_prompt)
         messages = [system_message] + self.messages
