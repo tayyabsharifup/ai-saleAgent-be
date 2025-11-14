@@ -223,7 +223,7 @@ class RecordingStatusView(APIView):
                 return Response({'Error': 'Email not found For Summary'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
             try:
-                if not send_summary_email(transcript.text, agent.smtp_email, agent.smtp_password, emailModel.email):
+                if not send_summary_email(transcript.text, agent.smtp_email, agent.smtp_password, emailModel.email, agent.email_provider):
                     return Response({'Error': f'Email Summary not sent for Lead of id {lead_id}'})
             except Exception as e:
                 return Response({'Error': f'Error in sending summary email'})
