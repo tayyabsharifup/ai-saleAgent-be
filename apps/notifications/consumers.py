@@ -42,6 +42,14 @@ class AsyncNotificationsConsumer(AsyncWebsocketConsumer):
         except NotificationModel.DoesNotExist:
             False
     
+    @database_sync_to_async
+    def mark_all_notifications_read(self):
+        try:
+            NotificationModel.objects.filter(user=self.user).update(is_read=True)
+            return True
+        except NotificationModel.DoesNotExist:
+            False
+    
     async def send_notifications(self):
         notifications_data = await self.get_notifications()
         await self.send(text_data=json.dumps({
@@ -54,7 +62,15 @@ class AsyncNotificationsConsumer(AsyncWebsocketConsumer):
             try:
                 data = json.loads(text_data)
                 msg = data.get("notification_id", "")
-                if isinstance(msg, int):
+                read_all_notifications = data.get("read_all", False)
+                if read_all_notifications:
+                    is_success = await self.mark_all_notifications_read()
+                    if is_success:
+                        await self.send_notifications()
+                    else:
+                        await self.send(text_data=json.dumps({"error": "No notifications found to mark as read"}))
+
+                elif isinstance(msg, int):
                     msg = str(msg)
                     is_success = await self.read_notification(msg)
                     if is_success:
