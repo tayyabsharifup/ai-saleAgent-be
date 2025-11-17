@@ -7,15 +7,15 @@ For more information on this file, see
 https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
 """
 
+from django.core.asgi import get_asgi_application
 import os
 
-from django.core.asgi import get_asgi_application
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ai_sales.settings')
+
 
 # Initialize Django ASGI application early to ensure the AppRegistry
 # is populated before importing code that may be used by the application.
 django_asgi_app = get_asgi_application()
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ai_sales.settings')
 
 
 async def application(scope, receive, send):
@@ -39,5 +39,5 @@ async def application(scope, receive, send):
                 websocket_urlpatterns
             )
         ))
-        
+
         await websocket_application(scope, receive, send)
