@@ -1,5 +1,8 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.db import database_sync_to_async
+from apps.notifications.models import NotificationModel
+from apps.notifications.serializers import NotificationSerializer
 
 
 class AsyncNotificationsConsumer(AsyncWebsocketConsumer):
@@ -20,6 +23,20 @@ class AsyncNotificationsConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
         await self.send(text_data=json.dumps({"message": f"Connected to notifications for user {self.user.first_name}!"}))
+        await self.send_notifications()
+
+    @database_sync_to_async
+    def get_notifications(self):
+        notifications = NotificationModel.objects.filter(user=self.user)
+        serializer = NotificationSerializer(notifications, many=True)
+        return serializer.data
+
+    async def send_notifications(self):
+        notifications_data = await self.get_notifications()
+        await self.send(text_data=json.dumps({
+            "type": "notification_list",
+            "notifications": notifications_data
+        }))
 
     async def receive(self, text_data=None, bytes_data=None):
         if text_data:
