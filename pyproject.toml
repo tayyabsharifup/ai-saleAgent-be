@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "certifi>=2025.7.14",
     "channels>=4.3.1",
+    "channels-redis>=4.3.0",
     "charset-normalizer>=3.4.2",
     "config>=0.5.1",
     "daphne>=4.2.1",

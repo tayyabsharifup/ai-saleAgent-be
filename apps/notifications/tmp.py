@@ -14,7 +14,7 @@ from apps.notifications.serializers import NotificationSerializer
 User = get_user_model()
 
 try:
-    user = User.objects.get(id=1)
+    user = User.objects.get(id=2)
     notification = NotificationModel.objects.create(user=user, message="Test notification from tmp.py")
     serializer = NotificationSerializer(notification)
     channel_layer = get_channel_layer()
