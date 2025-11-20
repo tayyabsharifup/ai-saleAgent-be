@@ -5,28 +5,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ai_sales.settings')
 import django
 django.setup()
 
-from apps.notifications.models import NotificationModel
-from django.contrib.auth import get_user_model
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
-from apps.notifications.serializers import NotificationSerializer
+from apps.notifications.utils.send_async_notification import send_async_notification as notification
 
-User = get_user_model()
-
-try:
-    user = User.objects.get(id=2)
-    notification = NotificationModel.objects.create(user=user, message="Test notification from tmp.py")
-    serializer = NotificationSerializer(notification)
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        f'notifications_{user.id}',
-        {
-            'type': 'notification_message',
-            'notification': serializer.data
-        }
-    )
-    print("Notification created and sent via websocket")
-except User.DoesNotExist:
-    print("User with id 1 does not exist")
-except Exception as e:
-    print(f"Error: {e}")
+notification(2, 'New message here')
