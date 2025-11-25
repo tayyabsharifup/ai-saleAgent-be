@@ -188,9 +188,18 @@ class AITool:
         Based on the prospect's interest level, generate a follow-up response
         It would be one of the following:
         Contact Type either 'call' or 'mail': {state.contact_type}
+
         If Contact Type is call then generate point to talk about as bullet points,
-        If email then generate email content.
+
+        In case of Call make sure to keep body consise, Do not add unnessary info. Keep the body which are point up to date. Up to 3-4 points MAX!
+
+        If email then generate email content. Keep email SHORT and CONCISE!
+
+        Also, generate 3-4 MAX key summary points of the chat message history!
+
         Interest Level: {state.interest_level}
+
+
         Info About Client: {LeadModel.objects.get(id=self.lead_id).info}
         Language: {language}
         Offer: {offer}
@@ -249,8 +258,6 @@ class AITool:
             Weight: 386 kg
             Platform load: 165 kg
 
-        Also, generate 3-4 MAX key summary points from the chat message history.
-        In case of Call make sure to keep body consise, Do not add unnessary info. Keep the body which are point up to date. Up to 5-8 points MAX.
         """
         system_message = SystemMessage(content=system_prompt)
         messages = [system_message] + self.messages
