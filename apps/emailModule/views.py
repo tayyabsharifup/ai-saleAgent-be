@@ -187,6 +187,51 @@ class CheckNewEmail(APIView):
 
         return Response({'message': 'No new emails found'}, status=HTTP_200_OK)
 
+class CheckNewEmailAgent(APIView):
+
+    def get(self, request, id):
+        try:
+            agent = AgentModel.objects.get(id=id)
+            email = agent.smtp_email
+            password = agent.smtp_password
+            email_provider = agent.email_provider
+            leads = LeadEmailModel.objects.filter(lead__assign_to=agent)
+            emails_found = False
+            # All the leads of the agent
+            for lead in leads:
+                if email_provider == 'gmail':
+                    try:
+                        emails = search_email_by_sender(
+                            email, password, lead.email)
+                    except MailboxLoginError:
+                        continue
+                elif email_provider == 'outlook':
+                    is_true, emails = outlookEmail.search_outlook_email(password, lead.email)
+                    if not is_true:
+                        continue
+                else:
+                    continue
+
+                if emails:
+                    emails_found = True
+                    for email in emails:
+                        id = email['message-id']
+                        if not ChatMessageHistory.objects.filter(pid=id).exists():
+                            obj, is_created = ChatMessageHistory.objects.get_or_create(
+                                lead=lead.lead,heading=email['subject'], body=email['body'], messageType='email', aiType='human', wroteBy='client', pid=id)
+                            try:
+                                refreshAI(lead.id)
+                            except Exception as e:
+                                return Response({'Error': f'Error in refreshing Lead of id {lead.id}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            if not emails_found:
+                return Response({'message': 'No new emails found'}, status=HTTP_200_OK)
+            return Response({'message': 'New emails found'}, status=HTTP_200_OK)
+
+        except AgentModel.DoesNotExist:
+            return Response({'message': 'Agent profile not found'}, status=HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'message': f'Failed: {e}'}, status=HTTP_400_BAD_REQUEST)
+
 class OutlookAuthTokenURLView(APIView):
 
     def get(self, request):
