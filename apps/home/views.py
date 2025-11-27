@@ -43,6 +43,8 @@ api_key_sid = os.getenv("TWILIO_API_KEY_SID")
 api_key_secret = os.getenv("TWILIO_API_KEY_SECRET")
 twilml_app_sid = os.getenv("TWILML_APP_SID")
 
+twilio_push_credentials = os.getenv("TWILIO_PUSH_CREDENTIALS")
+
 client = Client(sid, token)
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -122,7 +124,7 @@ class TwilioTokenView(APIView):
 
         token = AccessToken(
             sid, api_key_sid, api_key_secret, identity=identity, ttl=86400)
-        voice_grant = VoiceGrant(outgoing_application_sid=twilml_app_sid, incoming_allow=True)
+        voice_grant = VoiceGrant(outgoing_application_sid=twilml_app_sid, incoming_allow=True, push_credential_sid=twilio_push_credentials)
         token.add_grant(voice_grant)
 
         return Response({"token": token.to_jwt()})
