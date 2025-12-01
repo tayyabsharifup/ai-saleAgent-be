@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'drf_spectacular',
     'drf_spectacular_sidecar',
+    'django_q',
 
 
     # Project apps
@@ -232,4 +233,21 @@ CHANNEL_LAYERS = {
             "hosts": [("127.0.0.1", 6379)],
         },
     },
+}
+
+
+# Django-Q2 Configuration
+Q_CLUSTER = {
+    'name': 'ai_sales_worker',
+    'workers': 4,  # Number of worker processes
+    'timeout': 90,  # Seconds before a task is considered failed
+    'retry': 120,  # Seconds to wait before retrying a task
+    'queue_limit': 50,
+    'bulk': 10,
+    # 'orm': 'default',  # Use the default Django ORM database
+    'redis': {
+        'host': '127.0.0.1',
+        'port': 6379,
+        'db': 0,
+    }
 }
