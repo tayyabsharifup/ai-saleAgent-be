@@ -240,14 +240,14 @@ CHANNEL_LAYERS = {
 Q_CLUSTER = {
     'name': 'ai_sales_worker',
     'workers': 4,  # Number of worker processes
-    'timeout': 90,  # Seconds before a task is considered failed
-    'retry': 120,  # Seconds to wait before retrying a task
+    'timeout': 220,  # Seconds before a task is considered failed
+    'retry': 520,  # Seconds to wait before retrying a task
     'queue_limit': 50,
     'bulk': 10,
-    # 'orm': 'default',  # Use the default Django ORM database
-    'redis': {
-        'host': '127.0.0.1',
-        'port': 6379,
-        'db': 0,
-    }
+    'orm': 'default',  # Use the default Django ORM database
+    # 'redis': {
+    #     'host': '127.0.0.1',
+    #     'port': 6379,
+    #     'db': 0,
+    # }
 }

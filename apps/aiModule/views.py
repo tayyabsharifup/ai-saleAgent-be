@@ -117,7 +117,7 @@ class UnmapCallView(APIView):
 
             save_call_message(lead.id, newLeadCall.transcript)
 
-            refreshAI(lead.id)
+            async_task(refreshAI, lead.id)
             newLeadCall.is_map = True
             newLeadCall.save()
             return Response({'message': 'Lead Mapped'}, status=status.HTTP_200_OK)
