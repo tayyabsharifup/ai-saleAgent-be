@@ -24,7 +24,6 @@ from apps.emailModule.outlook import OutlookEmail
 from django_q.tasks import async_task
 
 
-async_task('apps.aiModule.tasks.add', 2, 3)
 # Create your views here.
 
 
