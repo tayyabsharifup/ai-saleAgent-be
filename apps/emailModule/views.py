@@ -18,6 +18,8 @@ from apps.users.models import LeadModel
 
 from apps.emailModule.outlook import OutlookEmail
 
+from django_q.tasks import async_task
+
 
 # Create your models here.
 
@@ -180,10 +182,12 @@ class CheckNewEmail(APIView):
                         if not ChatMessageHistory.objects.filter(pid=id).exists():
                             obj, is_created = ChatMessageHistory.objects.get_or_create(
                                 lead=lead.lead,heading=email['subject'], body=email['body'], messageType='email', aiType='human', wroteBy='client', pid=id)
-                            try:
-                                refreshAI(lead.id)
-                            except Exception as e:
-                                return Response({'Error': f'Error in refreshing Lead of id {lead.id}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                            
+                            async_task(refreshAI, lead.id)
+                            # try:
+                            #     refreshAI(lead.id)
+                            # except Exception as e:
+                            #     return Response({'Error': f'Error in refreshing Lead of id {lead.id}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({'message': 'No new emails found'}, status=HTTP_200_OK)
 
@@ -219,10 +223,12 @@ class CheckNewEmailAgent(APIView):
                         if not ChatMessageHistory.objects.filter(pid=id).exists():
                             obj, is_created = ChatMessageHistory.objects.get_or_create(
                                 lead=lead.lead,heading=email['subject'], body=email['body'], messageType='email', aiType='human', wroteBy='client', pid=id)
-                            try:
-                                refreshAI(lead.id)
-                            except Exception as e:
-                                return Response({'Error': f'Error in refreshing Lead of id {lead.id}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                            
+                            async_task(refreshAI, lead.id)
+                            # try:
+                            #     refreshAI(lead.id)
+                            # except Exception as e:
+                            #     return Response({'Error': f'Error in refreshing Lead of id {lead.id}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             if not emails_found:
                 return Response({'message': 'No new emails found'}, status=HTTP_200_OK)
             return Response({'message': 'New emails found'}, status=HTTP_200_OK)

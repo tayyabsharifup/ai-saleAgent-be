@@ -6,6 +6,8 @@ from apps.aiModule.utils.follow_up import refreshAI
 from imap_tools.errors import MailboxLoginError
 from apps.emailModule.outlook import OutlookEmail
 
+from django_q.tasks import async_task
+
 class Command(BaseCommand):
     help = "Fetches new emails from leads and updates the chat history"
 
@@ -49,9 +51,10 @@ class Command(BaseCommand):
                                 wroteBy='client',
                                 pid=message_id
                             )
-                            try:
-                                self.stdout.write(f"Refreshing AI for lead {lead.lead.id}")
-                                refreshAI(lead.lead.id)
-                            except Exception as e:
-                                self.stdout.write(self.style.ERROR(f"Error refreshing AI for lead {lead.lead.id}: {e}"))
+                            async_task(refreshAI, lead.lead.id)
+                            # try:
+                            #     self.stdout.write(f"Refreshing AI for lead {lead.lead.id}")
+                                # refreshAI(lead.lead.id)
+                            # except Exception as e:
+                                # self.stdout.write(self.style.ERROR(f"Error refreshing AI for lead {lead.lead.id}: {e}"))
         self.stdout.write(self.style.SUCCESS("Finished fetching new emails."))

@@ -20,6 +20,7 @@ from apps.users.permissions import (
     IsAdmin
 )
 
+from django_q.tasks import async_task
 
 
 class LeadRegisterView(APIView):
@@ -30,7 +31,8 @@ class LeadRegisterView(APIView):
         if serializer.is_valid():
             lead = serializer.save()
             try:
-                refreshAI(lead.id)
+                # refreshAI(lead.id)
+                async_task(refreshAI, lead.id)
             except Exception as e:
                 return Response({'Message': 'User created but failed to add AI message', 'Error': str(e)}, status=HTTP_201_CREATED)
             # send lead_id along with the 

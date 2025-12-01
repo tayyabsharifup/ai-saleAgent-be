@@ -230,10 +230,11 @@ class RecordingStatusView(APIView):
             except Exception as e:
                 return Response({'Error': f'Error in sending summary email'})
 
-            try:
-                refreshAI(lead_id)
-            except Exception as e:
-                return Response({'Error': f'Error in refreshing Lead of id {lead_id}'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+            async_task(refreshAI, lead_id)
+            # try:
+            #     # refreshAI(lead_id)
+            # except Exception as e:
+            #     return Response({'Error': f'Error in refreshing Lead of id {lead_id}'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
             return Response({
                 'status': 'success',
