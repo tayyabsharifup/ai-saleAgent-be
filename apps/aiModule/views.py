@@ -86,6 +86,7 @@ class AddLeadInfo(APIView):
                 lead=lead, heading='Manual Conversation added between Client and Agent', body=info,
                 messageType='manual', aiType='human', interestLevel='none', wroteBy='agent')
             chat.save()
+            async_task(refreshAI, lead.id)
         except:
             return Response({'Error': 'Lead not found'}, status=status.HTTP_404_NOT_FOUND)
         return Response({'message': 'Lead Info Added'}, status=status.HTTP_200_OK)
