@@ -96,47 +96,6 @@ class AITool:
             else:
                 return END
 
-    # def initialResponseNode(self, state: SalesState):
-    #     system_prompt = """
-
-    #         """
-    #     try:
-    #         manager = ManagerModel.objects.get(agent_model__leadmodel__id=self.lead_id)
-    #         language = manager.language
-    #         offer = manager.offer
-    #         selling_point = manager.selling_point
-    #         faq = manager.faq
-
-    #     except Exception as e:
-    #         language = ''
-    #         offer = ''
-    #         selling_point = ''
-    #         faq = ''
-
-    #     llm = ChatOpenAI(model='gpt-4.1-mini', temperature=0).with_structured_output(MessageResponse)
-    #     system_prompt = f"""
-    #     You are AI sales Assistant and Based on the information About the Lead and Agent.
-    #     Generate Few Talking point for Lead Call
-    #     Info About Client: {LeadModel.objects.get(id=self.lead_id).info}
-    #     Language: {language}
-    #     Offer: {offer}
-    #     Selling Point: {selling_point}
-    #     FAQ: {faq}
-    #     """
-    #     system_message = SystemMessage(content=system_prompt)
-    #     messages = [system_message] + self.messages
-    #     response = llm.invoke(messages)
-    #     if response:
-    #         state.heading = response.heading
-    #         state.body = response.body
-    #         state.contact_type = 'call'
-    #         state.follow_up_date = 1
-    #         state.interest_level = 'none'
-    #         if not save_ai_message(self.lead_id, state):
-    #             raise Exception("Failed to save AI message")
-    #     else:
-    #         raise Exception("Failed to generate response")
-    #     return state
 
     def interestNode(self, state: SalesState):
         llm = ChatOpenAI(model='gpt-5').with_structured_output(InterestLevel)
