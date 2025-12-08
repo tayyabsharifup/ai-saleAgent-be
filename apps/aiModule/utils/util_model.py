@@ -14,14 +14,71 @@ def get_chat_message_by_id(lead_id):
     for message in messages:
         folow_up = message.follow_up_date if message.follow_up_date else 'None'
         content = f"""Time Created: {message.created_at} Follow Up Due Date: {folow_up} Today's Date: {datetime.today()}
-        Wrote by {message.wroteBy} interest level: {message.interestLevel} Type: {message.messageType} 
+        Wrote by {message.wroteBy} interest level: {message.interestLevel} Type: {message.messageType}
         Heading: {message.heading} Body: {message.body}"""
         if message.aiType == 'ai':
             messages_list.append(AIMessage(content=content))
         elif message.aiType == 'human':
             messages_list.append(HumanMessage(content=content))
     return messages_list
-    
+
+
+def get_initial_decide(lead_id) -> bool:
+    follow_up_rules = {
+        "short": [
+            {"contact_type": "call", "days": 1},
+            {"contact_type": "call_or_mail", "days": 3},
+            {"contact_type": "call", "days": 3},
+            {"contact_type": "call", "days": 6},
+            {"contact_type": "call_or_mail", "days": 9},
+            {"contact_type": "call", "days": 12},
+            {"contact_type": "call_or_mail", "days": 20},
+            {"contact_type": "call_or_mail", "days": 40},
+            {"contact_type": "call_or_mail", "days": 100},
+            {"contact_type": "call_or_mail", "days": 200}
+        ],
+        "mid": [
+            {"contact_type": "call", "days": 7},
+            {"contact_type": "call_or_mail", "days": 14},
+            {"contact_type": "call_or_mail", "days": 14},
+            {"contact_type": "call", "days": 28},
+            {"contact_type": "mail", "days": 48},
+            {"contact_type": "mail", "days": 48},
+            {"contact_type": "call", "days": 60},
+            {"contact_type": "mail", "days": 100},
+            {"contact_type": "mail", "days": 140},
+            {"contact_type": "mail", "days": 250}
+        ],
+        "long": [
+            {"contact_type": "mail", "days": 80},
+            {"contact_type": "mail", "days": 180},
+            {"contact_type": "mail", "days": 320}
+        ],
+        "none": [
+
+        ]
+    }
+    messages = list(ChatMessageHistory.objects.filter(lead_id=lead_id))
+    last = messages.pop()
+    if last.wroteBy == 'ai':
+        return False
+    elif last.wroteBy == 'client' or last.wroteBy == 'none':
+        return True
+    elif last.wroteBy == 'agent':
+        if last.interestLevel == 'none':
+            return False
+        else:
+            interest = last.interestLevel
+
+
+    # while messages:
+    #     last = messages.pop()
+    #     if last.aiType != 'ai':
+    #         return True
+    print(type(last))
+    print(last.interestLevel)
+    print(last.wroteBy)
+    print("-------------------")
 
 
 def add_chat_message(lead_id, heading, body, messageType='none', aiType='none', interestLevel='none', wroteBy='none', follow_up_day=0, key_points=None):
@@ -47,6 +104,7 @@ def add_chat_message(lead_id, heading, body, messageType='none', aiType='none', 
     except LeadModel.DoesNotExist:
         return None
 
+
 def save_call_message(lead_id, text):
     try:
         return add_chat_message(
@@ -62,7 +120,6 @@ def save_call_message(lead_id, text):
         return None
 
 
-
 def save_ai_message(lead_id, state):
     # check if the message is instance of AIMessage
     return add_chat_message(
@@ -76,6 +133,7 @@ def save_ai_message(lead_id, state):
         follow_up_day=state.follow_up_date,
         key_points=state.key_points
     )
+
 
 if __name__ == "__main__":
     lead_id = 1  # Example lead ID

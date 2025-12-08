@@ -96,7 +96,6 @@ class AITool:
             else:
                 return END
 
-
     def interestNode(self, state: SalesState):
         llm = ChatOpenAI(model='gpt-5').with_structured_output(InterestLevel)
         system_prompt = """
@@ -142,7 +141,7 @@ class AITool:
             faq = ''
 
         llm = ChatOpenAI(model='gpt-5'
-                          ).with_structured_output(MessageResponse)
+                         ).with_structured_output(MessageResponse)
         system_prompt = f"""
         Based on the prospect's interest level, generate a follow-up response
         It would be one of the following:
@@ -297,13 +296,11 @@ class AITool:
         # Building the state graph
         builder = StateGraph(SalesState)
         builder.add_node('initial_decide', self.initialDecideNode)
-        # builder.add_node('initial_response', self.initialResponseNode)
         builder.add_node('classifier', self.interestNode)
         builder.add_node('follow_up', self.followUpNode)
         builder.add_node('response', self.responseNode)
 
         builder.add_conditional_edges(START, self.initialDecideNode)
-        # builder.add_edge('initial_response', END)
         builder.add_edge('classifier', 'follow_up')
         builder.add_edge('follow_up', 'response')
         builder.add_edge('response', END)
