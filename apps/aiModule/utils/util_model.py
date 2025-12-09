@@ -87,7 +87,6 @@ def get_initial_decide(lead_id) -> bool:
             print('More than one agent message')
             num += 1
             last = messages.pop()
-            print(f'last - {last}')
 
         # Check if num is within the bounds of the follow_up_rules for the given interest level
         if interest in follow_up_rules and num < len(follow_up_rules[interest]):
@@ -141,7 +140,7 @@ def save_call_message(lead_id, text):
             body=text,
             messageType='call',
             aiType='human',
-            wroteBy='agent',
+            wroteBy='client',
 
         )
     except Exception as e:
