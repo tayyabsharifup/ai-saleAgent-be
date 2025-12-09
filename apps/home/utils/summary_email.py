@@ -19,8 +19,19 @@ def summary(context):
     response = llm.invoke(system_prompt)
     return response
 
-def send_summary_email(transcript_text, agent_smtp_email, agent_smtp_password, lead_email, email_provider):
-    summaryResponse = summary(transcript_text)
+# def send_summary_email(transcript_text, agent_smtp_email, agent_smtp_password, lead_email, email_provider):
+#     summaryResponse = summary(transcript_text)
+#     if email_provider == 'gmail':
+#         send_email(agent_smtp_email, agent_smtp_password, lead_email, summaryResponse.heading, summaryResponse.body)
+#         return True
+#     elif email_provider == 'outlook':
+#         is_true, message = outlookEmail.send_outlook_email(agent_smtp_password, lead_email, summaryResponse.heading , summaryResponse.body)
+#         if not is_true:
+#             return True
+#     return False
+
+
+def send_summary_email(summaryResponse, agent_smtp_email, agent_smtp_password, lead_email, email_provider):
     if email_provider == 'gmail':
         send_email(agent_smtp_email, agent_smtp_password, lead_email, summaryResponse.heading, summaryResponse.body)
         return True
@@ -29,4 +40,3 @@ def send_summary_email(transcript_text, agent_smtp_email, agent_smtp_password, l
         if not is_true:
             return True
     return False
-

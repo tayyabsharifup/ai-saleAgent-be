@@ -29,7 +29,7 @@ from apps.users.models.lead_model import LeadModel, LeadEmailModel
 from apps.aiModule.models import NewLeadCall
 from apps.aiModule.utils.util_model import save_call_message
 from apps.aiModule.utils.follow_up import refreshAI
-from apps.home.utils.summary_email import send_summary_email
+from apps.home.utils.summary_email import send_summary_email, summary
 
 
 
@@ -209,6 +209,7 @@ class RecordingStatusView(APIView):
                 'transcript': transcript.text
             }, status=HTTP_200_OK)
 
+            summary_text = summary(transcript.text)
             save_call_message(lead_id, transcript.text)
 
             # Send summary email to lead
@@ -225,7 +226,7 @@ class RecordingStatusView(APIView):
                 return Response({'Error': 'Email not found For Summary'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
             try:
-                if not send_summary_email(transcript.text, agent.smtp_email, agent.smtp_password, emailModel.email, agent.email_provider):
+                if not send_summary_email(summary_text, agent.smtp_email, agent.smtp_password, emailModel.email, agent.email_provider):
                     return Response({'Error': f'Email Summary not sent for Lead of id {lead_id}'})
             except Exception as e:
                 return Response({'Error': f'Error in sending summary email'})
