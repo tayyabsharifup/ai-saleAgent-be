@@ -3,10 +3,10 @@ from datetime import datetime
 from django.utils import timezone
 
 
-def main():
-    li = get_initial_decide(3)
+def main(num: int):
+    li = get_initial_decide(num)
     print(f'response -> {li}')
 
 
 if __name__ == "__main__":
-    main()
+    main(num)
