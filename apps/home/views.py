@@ -31,6 +31,8 @@ from apps.aiModule.utils.util_model import save_call_message
 from apps.aiModule.utils.follow_up import refreshAI
 from apps.home.utils.summary_email import send_summary_email, summary
 
+from django_q.tasks import async_task
+
 
 
 load_dotenv(override=True)
