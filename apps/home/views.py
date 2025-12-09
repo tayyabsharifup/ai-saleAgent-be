@@ -212,7 +212,7 @@ class RecordingStatusView(APIView):
             }, status=HTTP_200_OK)
 
             summary_text = summary(transcript.text)
-            save_call_message(lead_id, transcript.text)
+            save_call_message(lead_id,summary_text)
 
             # Send summary email to lead
             try:
