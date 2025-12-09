@@ -6,6 +6,8 @@ from apps.aiModule.models import ChatMessageHistory
 from apps.users.models import LeadModel
 from langchain_core.messages import HumanMessage, AIMessage
 from datetime import datetime, timedelta
+from django.utils import timezone
+
 
 
 def get_chat_message_by_id(lead_id):
@@ -21,6 +23,13 @@ def get_chat_message_by_id(lead_id):
         elif message.aiType == 'human':
             messages_list.append(HumanMessage(content=content))
     return messages_list
+
+def get_last_ai_interest(messages):
+    while messages:
+        last = messages.pop()
+        if last.aiType == 'ai':
+            return str(last.interestLevel)
+    return None
 
 
 def get_initial_decide(lead_id) -> bool:
@@ -54,32 +63,42 @@ def get_initial_decide(lead_id) -> bool:
             {"contact_type": "mail", "days": 180},
             {"contact_type": "mail", "days": 320}
         ],
-        "none": [
-
-        ]
     }
     messages = list(ChatMessageHistory.objects.filter(lead_id=lead_id))
     last = messages.pop()
+    print(f'last - {last}')
+    
+
     if last.wroteBy == 'ai':
+        print('ai message')
         return False
     elif last.wroteBy == 'client' or last.wroteBy == 'none':
+        print('client message')
         return True
     elif last.wroteBy == 'agent':
-        if last.interestLevel == 'none':
-            return False
+        interest = get_last_ai_interest(list(ChatMessageHistory.objects.filter(lead_id=lead_id)))
+        print(interest)
+        days = (timezone.now() - last.created_at).days
+        print(f'days - {days}')
+        num = 0
+        last = messages.pop()
+        while last.wroteBy == 'agent':
+            print('More than one agent message')
+            num += 1
+            last = messages.pop()
+            print(f'last - {last}')
+        
+        if follow_up_rules[interest][num]['days'] <= days:
+            print('agent last days passed')
+            print(f'interest - {interest} num - {num} follow up logic days - {follow_up_rules[interest][num]['days']}')
+
+            return True
         else:
-            interest = last.interestLevel
-
-
-    # while messages:
-    #     last = messages.pop()
-    #     if last.aiType != 'ai':
-    #         return True
-    print(type(last))
-    print(last.interestLevel)
-    print(last.wroteBy)
-    print("-------------------")
-
+            print('agent last days not passed')
+            return False
+    else:
+        print("Error not wroteBy valid found")
+        return False
 
 def add_chat_message(lead_id, heading, body, messageType='none', aiType='none', interestLevel='none', wroteBy='none', follow_up_day=0, key_points=None):
     # create datefield from follow_up_day

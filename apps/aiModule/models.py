@@ -24,7 +24,7 @@ class ChatMessageHistory(models.Model):
         ordering = ['created_at']
 
     def __str__(self):
-        return f"{self.lead} - {self.created_at}"
+        return f"{self.lead} - {self.wroteBy} - {self.created_at}"
 
 class NewLeadCall(models.Model):
     is_map = models.BooleanField(default=False)

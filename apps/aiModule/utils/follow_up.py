@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from langchain_core.messages import SystemMessage
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
+from apps.aiModule.utils.util_model import get_initial_decide
 import os
 # import sys
 import django
@@ -76,25 +77,31 @@ class AITool:
         if not self.messages:
             return END
         else:
-            llm = ChatOpenAI(
-                model='gpt-5').with_structured_output(ShouldFollowUp)
-            system_prompt = f"""
-                You are Expert Follow Up planner. By giving the list of the Message interaction between Client, Agent and AI module.
-                There would two scenario to which write a follow-up plan.
-                First, Client has replied to your response by email or we have a call and now we need a response from AI.
-                Second, You would decide that either we need to create follow up for Client if the client has no response and due date is passed and
-                client did not responed or we do not need to make plan either waiting for client to response to our query or the due date is not passed yet.
-                Here are follow_up rules based on the interest and number of days the client has not responsed
-                {self.follow_up_rules}
-            """
-            system_message = SystemMessage(content=system_prompt)
-            messages = [system_message] + self.messages
-            response = llm.invoke(messages)
-            print(response)
-            if response and response.follow_up:
+            if get_initial_decide(self.lead_id):
                 return 'classifier'
             else:
                 return END
+
+        # else:
+        #     llm = ChatOpenAI(
+        #         model='gpt-5').with_structured_output(ShouldFollowUp)
+        #     system_prompt = f"""
+        #         You are Expert Follow Up planner. By giving the list of the Message interaction between Client, Agent and AI module.
+        #         There would two scenario to which write a follow-up plan.
+        #         First, Client has replied to your response by email or we have a call and now we need a response from AI.
+        #         Second, You would decide that either we need to create follow up for Client if the client has no response and due date is passed and
+        #         client did not responed or we do not need to make plan either waiting for client to response to our query or the due date is not passed yet.
+        #         Here are follow_up rules based on the interest and number of days the client has not responsed
+        #         {self.follow_up_rules}
+        #     """
+        #     system_message = SystemMessage(content=system_prompt)
+        #     messages = [system_message] + self.messages
+        #     response = llm.invoke(messages)
+        #     print(response)
+        #     if response and response.follow_up:
+        #         return 'classifier'
+        #     else:
+        #         return END
 
     def interestNode(self, state: SalesState):
         llm = ChatOpenAI(model='gpt-5').with_structured_output(InterestLevel)
