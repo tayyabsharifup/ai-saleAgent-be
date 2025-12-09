@@ -2,12 +2,11 @@ import os
 import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ai_sales.settings')
 django.setup()
-from apps.aiModule.models import ChatMessageHistory
-from apps.users.models import LeadModel
-from langchain_core.messages import HumanMessage, AIMessage
-from datetime import datetime, timedelta
 from django.utils import timezone
-
+from datetime import datetime, timedelta
+from langchain_core.messages import HumanMessage, AIMessage
+from apps.users.models import LeadModel
+from apps.aiModule.models import ChatMessageHistory
 
 
 def get_chat_message_by_id(lead_id):
@@ -23,6 +22,7 @@ def get_chat_message_by_id(lead_id):
         elif message.aiType == 'human':
             messages_list.append(HumanMessage(content=content))
     return messages_list
+
 
 def get_last_ai_interest(messages):
     while messages:
@@ -63,11 +63,11 @@ def get_initial_decide(lead_id) -> bool:
             {"contact_type": "mail", "days": 180},
             {"contact_type": "mail", "days": 320}
         ],
+        "none": []
     }
     messages = list(ChatMessageHistory.objects.filter(lead_id=lead_id))
     last = messages.pop()
     print(f'last - {last}')
-    
 
     if last.wroteBy == 'ai':
         print('ai message')
@@ -76,7 +76,8 @@ def get_initial_decide(lead_id) -> bool:
         print('client message')
         return True
     elif last.wroteBy == 'agent':
-        interest = get_last_ai_interest(list(ChatMessageHistory.objects.filter(lead_id=lead_id)))
+        interest = get_last_ai_interest(
+            list(ChatMessageHistory.objects.filter(lead_id=lead_id)))
         print(interest)
         days = (timezone.now() - last.created_at).days
         print(f'days - {days}')
@@ -87,18 +88,26 @@ def get_initial_decide(lead_id) -> bool:
             num += 1
             last = messages.pop()
             print(f'last - {last}')
-        
-        if follow_up_rules[interest][num]['days'] <= days:
-            print('agent last days passed')
-            print(f'interest - {interest} num - {num} follow up logic days - {follow_up_rules[interest][num]['days']}')
 
-            return True
+        # Check if num is within the bounds of the follow_up_rules for the given interest level
+        if interest in follow_up_rules and num < len(follow_up_rules[interest]):
+            if follow_up_rules[interest][num]['days'] <= days:
+                print('agent last days passed')
+                print(
+                    f'interest - {interest} num - {num} follow up logic days - {follow_up_rules[interest][num]['days']}')
+
+                return True
+            else:
+                print('agent last days not passed')
+                return False
         else:
-            print('agent last days not passed')
+            print(
+                f'num ({num}) is out of range for interest level ({interest}).')
             return False
     else:
         print("Error not wroteBy valid found")
         return False
+
 
 def add_chat_message(lead_id, heading, body, messageType='none', aiType='none', interestLevel='none', wroteBy='none', follow_up_day=0, key_points=None):
     # create datefield from follow_up_day
