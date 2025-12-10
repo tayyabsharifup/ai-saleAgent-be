@@ -18,13 +18,13 @@ def send_async_notification(user: int, message: str) -> Tuple[bool, str]:
         async_to_sync(channel_layer.group_send)(
             f'notifications_{user.id}',
             {
-                'type': 'send_notification',
+                'type': 'notification_message',
                 'value': serialzer.data
             }
         )
 
         return True, 'Notification sent successfully'
-    except Exception as e:
-        return False, str(e)
     except User.DoesNotExist:
         return False, f"User with id {user} does not exist"
+    except Exception as e:
+        return False, str(e)
