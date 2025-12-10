@@ -19,7 +19,7 @@ def send_async_notification(user: int, message: str) -> Tuple[bool, str]:
             f'notifications_{user.id}',
             {
                 'type': 'notification_message',
-                'value': serialzer.data
+                'notification': serialzer.data
             }
         )
 
