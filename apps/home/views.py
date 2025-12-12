@@ -257,10 +257,11 @@ class TwilioBuyNumber(APIView):
 
     
     def get(self, request):
-        country = 'US'
+        country = request.GET.get('country', 'US')
+        # country = 'US'
 
         available_numbers = client.available_phone_numbers(
-            country).local.list(limit=20)
+            country).local.list(limit=10)
 
         return Response({
             'available_numbers': [number.phone_number for number in available_numbers]
@@ -269,12 +270,31 @@ class TwilioBuyNumber(APIView):
     
     def post(self, request):
         number = request.data.get('number')
+        country = request.data.get('country', 'US')
         if not number:
             return Response({'error': 'Number is required'}, status=HTTP_400_BAD_REQUEST)
         try:
-            purchased_number = client.incoming_phone_numbers.create(
-                phone_number=number,
-            )
+
+            if country == "GB":
+                address = client.addresses.create(
+                    customer_name='Customer Name',
+                    street='123 Main St',
+                    city='London',
+                    region='ENG',
+                    postal_code='SW1A 1AA',
+                    iso_country='GB'
+                )
+                purchased_number = client.incoming_phone_numbers.create(
+                    phone_number=number,
+                    address_sid=address.sid
+                )
+            else:
+                purchased_number = client.incoming_phone_numbers.create(
+                    phone_number=number,
+                )
+            # purchased_number = client.incoming_phone_numbers.create(
+            #     phone_number=number,
+            # )
             
             # Update the purchased number to use TwiML app
             purchased_number.update(
