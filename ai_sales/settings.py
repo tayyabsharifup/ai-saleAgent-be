@@ -244,10 +244,12 @@ Q_CLUSTER = {
     'retry': 520,  # Seconds to wait before retrying a task
     'queue_limit': 50,
     'bulk': 10,
-    'orm': 'default',  # Use the default Django ORM database
-    # 'redis': {
-    #     'host': '127.0.0.1',
-    #     'port': 6379,
-    #     'db': 0,
-    # }
+    # 'orm': 'default',  # Use the default Django ORM database
+    'redis': {
+        'host': '127.0.0.1',
+        'port': 6379,
+        'db': 0,
+    },
+    'scheduler': True,
+
 }
