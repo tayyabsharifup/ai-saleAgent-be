@@ -10,8 +10,6 @@ from rest_framework.status import *
 from rest_framework import serializers
 
 
-
-
 from twilio.rest import Client
 from twilio.twiml.voice_response import VoiceResponse
 from django.http import HttpResponse
@@ -32,7 +30,6 @@ from apps.aiModule.utils.follow_up import refreshAI
 from apps.home.utils.summary_email import send_summary_email, summary
 
 from django_q.tasks import async_task
-
 
 
 load_dotenv(override=True)
@@ -99,16 +96,19 @@ class VoiceResponseView(APIView):
         elif direction == 'inbound':
             # Incoming call to Twilio number
             print("Inbound call")
-            to_number = request.data.get('To')  # The Twilio number receiving the call
+            # The Twilio number receiving the call
+            to_number = request.data.get('To')
             agent = AgentModel.objects.filter(phone=to_number).first()
             callback_url = '/temp/recording-status/'
             client_identity = "browser-user"
             if agent:
                 callback_url += f'?agent_id={agent.id}'
                 client_identity = f"agent-{agent.id}"
-            print(f"Agent found: {agent is not None}, Client identity: {client_identity}")
+            print(
+                f"Agent found: {agent is not None}, Client identity: {client_identity}")
 
-            dial = response.dial(record=True, recording_status_callback=callback_url, recording_status_callback_method='POST')
+            dial = response.dial(
+                record=True, recording_status_callback=callback_url, recording_status_callback_method='POST')
             dial.client(client_identity)
         else:
             print("Unable to determine call direction.")
@@ -120,13 +120,13 @@ class VoiceResponseView(APIView):
 class TwilioTokenView(APIView):
     permission_classes = [AllowAny]
 
-    
     def get(self, request):
         identity = request.GET.get('identity', "browser-user")
 
         token = AccessToken(
             sid, api_key_sid, api_key_secret, identity=identity, ttl=86400)
-        voice_grant = VoiceGrant(outgoing_application_sid=twilml_app_sid, incoming_allow=True, push_credential_sid=twilio_push_credentials)
+        voice_grant = VoiceGrant(outgoing_application_sid=twilml_app_sid,
+                                 incoming_allow=True, push_credential_sid=twilio_push_credentials)
         token.add_grant(voice_grant)
 
         return Response({"token": token.to_jwt()})
@@ -145,7 +145,6 @@ class ReceiveCallView(View):
 class RecordingStatusView(APIView):
     permission_classes = [AllowAny]
 
-    
     def post(self, request):
         print(f"Data from request: {request.data}")
         recording_sid = request.data.get('RecordingSid')
@@ -173,19 +172,20 @@ class RecordingStatusView(APIView):
             from_num = leg._from
             to_num = leg.to
 
-            lead = LeadModel.objects.filter(leadphonemodel__phone_number=to_num).first()
+            lead = LeadModel.objects.filter(
+                leadphonemodel__phone_number=to_num).first()
             if lead:
                 lead_id = lead.id
                 break
 
-            lead = LeadModel.objects.filter(leadphonemodel__phone_number=from_num).first()
+            lead = LeadModel.objects.filter(
+                leadphonemodel__phone_number=from_num).first()
             if lead:
                 lead_id = lead.id
                 break
 
         if not lead_id and not from_num:
             return Response({'error': 'Lead not found for this call'}, status=HTTP_400_BAD_REQUEST)
-    
 
         try:
             response = requests.get(recording_url, auth=(sid, token))
@@ -207,12 +207,12 @@ class RecordingStatusView(APIView):
                     newLeadCall.agent = agent
                     newLeadCall.save()
                 return Response({"status": 'success',
-                'message':'No Lead Found For Mapping',
-                'transcript': transcript.text
-            }, status=HTTP_200_OK)
+                                 'message': 'No Lead Found For Mapping',
+                                 'transcript': transcript.text
+                                 }, status=HTTP_200_OK)
 
             summary_text = summary(transcript.text)
-            save_call_message(lead_id,summary_text.body)
+            save_call_message(lead_id, summary_text.body)
 
             # Send summary email to lead
             try:
@@ -223,7 +223,8 @@ class RecordingStatusView(APIView):
             except LeadModel.DoesNotExist:
                 return Response({'Error': 'Lead not found'}, status=HTTP_404_NOT_FOUND)
 
-            emailModel = LeadEmailModel.objects.filter(lead__id=lead_id).first()
+            emailModel = LeadEmailModel.objects.filter(
+                lead__id=lead_id).first()
             if not emailModel:
                 return Response({'Error': 'Email not found For Summary'}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -255,19 +256,19 @@ class RecordingStatusView(APIView):
 class TwilioBuyNumber(APIView):
     # permission_classes = [IsAdmin]
 
-    
     def get(self, request):
         country = request.GET.get('country', 'US')
         # country = 'US'
+        try:
+            available_numbers = client.available_phone_numbers(
+                country).local.list(limit=20)
 
-        available_numbers = client.available_phone_numbers(
-            country).local.list(limit=10)
+            return Response({
+                'available_numbers': [number.phone_number for number in available_numbers]
+            }, status=HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=HTTP_400_BAD_REQUEST)
 
-        return Response({
-            'available_numbers': [number.phone_number for number in available_numbers]
-        }, status=HTTP_200_OK)
-
-    
     def post(self, request):
         number = request.data.get('number')
         country = request.data.get('country', 'US')
@@ -295,7 +296,7 @@ class TwilioBuyNumber(APIView):
             # purchased_number = client.incoming_phone_numbers.create(
             #     phone_number=number,
             # )
-            
+
             # Update the purchased number to use TwiML app
             purchased_number.update(
                 voice_application_sid=twilml_app_sid
