@@ -18,6 +18,7 @@ from .views.agent_view import (
     AgentDashboardView,
     AgentCallAnalytics,
     UpdateAgentView,
+    GetUnassignAgent
 )
 
 from .views.lead_view import (
@@ -81,6 +82,7 @@ manager = [
     path('manager/call-analytics/', ManagerCallAnalytics.as_view(), name='manager-call-analytics'),
     path('manager/short-survey/', ManagerShortSurveyView.as_view(), name='manager-short-survey'),
     path('manager/all-manager/', GetAllManagerView.as_view(), name='get-all-manager'),
+    path('manager/get-unassign/', GetUnassignAgent.as_view(), name='agent-unassign')
 ]
 
 admin = [

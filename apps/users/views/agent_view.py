@@ -1,3 +1,5 @@
+from rest_framework.status import HTTP_200_OK
+from email.policy import HTTP
 from datetime import timedelta
 from django.utils import timezone
 from rest_framework.views import APIView
@@ -63,6 +65,14 @@ class AgentProfileView(APIView):
         except AgentModel.DoesNotExist:
             return Response({'message': 'Agent profile not found'}, status=HTTP_404_NOT_FOUND)
 
+
+class GetUnassignAgent(APIView):
+    permission_classes = [IsAdmin | IsManager]
+
+    def get(self, request):
+        agents = AgentModel.objects.filter(assign_manager__isnull=True)
+        serializer = AgentUpdateProfileSerializer(agents, many=True)
+        return Response(serializer.data, status=HTTP_200_OK)
 
 class AgentDashboardView(APIView):
     permission_classes = [IsAgent]
